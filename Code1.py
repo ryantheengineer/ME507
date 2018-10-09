@@ -5,19 +5,21 @@ import numpy as np
 
 # Establish a list of node numbers:
 # n = [10, 100, 1000, 10000]
-# n = [10,100,1000]
-n = [10]
+n = [10,100,1000]
+# n = [10]
 
 # Create structure of cases or iterations that go through the different cases
 # where the definition of f changes
 
 for elements in n:
+    print("\n\nn = %d") % elements
     he = 1.0/elements
+    # print("he = %f") % he
 
     # element-wise stiffness matrix
     ke = (1/he)*np.array([[1, -1],[-1, 1]])
 
-    print("ke = ", ke)
+    # print("ke = ", ke)
 
     # Assemble the k element wise stiffness matrices into a global K matrix
     K = np.zeros([elements,elements])
@@ -43,19 +45,40 @@ for elements in n:
     # a way that only the nonzero indices are used.
 
     fe = np.zeros([2,1])
+    F = np.zeros([elements,1])
     x1 = 0
     x2 = 0
     # Solving for the f elementwise vector
     # if f(x) = c:
     c = 1   # stand-in value for constant c
-    for el in range(1,elements+1): # NOTE:May need to double check this range
+    for el in range(1,elements): # NOTE:May need to double check this range
+        # print("el = %d") % el
+        Ftemp = np.zeros([elements,1])  # reset Ftemp back to zeros
         x1 = (el-1)*he
+        # print("x1 = %f") % x1
         x2 = el*he
+        # print("x2 = %f") % x2
         fe[0] = (c/he)*((x2**2)/2 + x1*x2 + (x1**2)/2) # NOTE: consider making this a method to be called
         fe[1] = (c/he)*((x1**2)/2 - x1*x2 + (x2**2)/2)
-        print("fe = ",fe)
+        # print("fe = ",fe)
 
-        # NOTE: Then need to add current fe vector into the proper place in Ftemp,
-        # which then should be added into the global F vector, like the method
-        # for K
-        
+        Ftemp[el-1] = fe[0]
+        Ftemp[el] = fe[1]
+        # print("Ftemp = ",Ftemp)
+        F += Ftemp
+        # print("F = ",F)
+    # NOTE: need to check to make sure the proper elements are being added into
+    # the F vector at the end
+    x1 = elements*he
+    x2 = (elements+1)*he
+    fe[0] = (c/he)*((x2**2)/2 + x1*x2 + (x1**2)/2)
+    F[-1] += fe[0]
+    # print("\n\n")
+    # print("el = 10")
+    # print("Adding stuff from element 10")
+    print("F = ",F)
+
+    d = np.linalg.solve(K,F)
+    print("\n\n")
+    print("d = ",d)
+    # NOTE: this might be correct for the f(x) = c case
