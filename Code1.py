@@ -1,7 +1,14 @@
 '''Code1.py: A Python script to complete coding assignment 1 for ME 507.'''
 
 import numpy as np
+import matplotlib.pyplot as plt
 
+
+def N1(x1,x2,x):
+    return (x2 - x)/(x2 - x1)
+
+def N2(x1,x2,x):
+    return (x - x1)/(x2 - x1)
 
 # Establish a list of node numbers:
 # n = [10, 100, 1000, 10000]
@@ -91,3 +98,40 @@ for loadcase in fcase:
         d = np.linalg.solve(K,F)
         print("d = ",d)
         # NOTE: this might be correct for the f(x) = c case
+
+# PLOT THE EXACT AND APPROXIMATE SOLUTION FOR EACH F(X) AND N:
+
+# Create xvector for exact solutions (smooth curve)
+N = 10000
+x = np.linspace(0,1,N,endpoint=True)
+uA = np.zeros([len(x),1])
+uB = np.zeros([len(x),1])
+uC = np.zeros([len(x),1])
+for i in range(len(uA)):
+    uA[i] = 0.5*c**2 - 0.5*c*x[i]**2
+for i in range(len(uB)):
+    uB[i] = (1/6.)*(1 - x[i]**3)
+for i in range(len(uC)):
+    uC[i] = (1/12.)*(1 - x[i]**4)
+u = [uA,uB,uC]
+
+i = 0
+for solution in u:
+    plt.figure()
+    plt.plot(x,solution) # THIS IS A MISTAKE. IT SHOULDN'T BE PLOTTING F, IT SHOULD BE PLOTTING THE EXACT SOLUTION U(X)
+    plt.show()
+    # for elements in n:
+    #     he = 1.0/elements
+    #     for el in range(1,elements+1):
+    #         # set the element number el
+    #         # determine endpoints of the given element
+    #         x1 = (el-1)*he
+    #         x2 = el*he
+    #         for dnum in d:
+    #             uh = dnum*N1(x1,x2,x)
+    #         while x >= x1 and x < x2:
+    #             plt.plot(x,)
+
+# THE ABOVE ALGORITHM NEEDS TO BE SORTED OUT IN PSEUDO-CODE BEFORE IMPLEMENTATION.
+# IT WILL REQUIRE THE SAVING OF THE DIFFERENT K, d, AND F VECTORS.
+    i+=1
