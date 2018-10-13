@@ -15,6 +15,7 @@ def N2(x1,x2,x):
 # n = [10,100,1000]
 n = [10,100]
 
+
 # Create structure of cases or iterations that go through the different cases
 # where the definition of f changes
 fcase = ['A','B','C']
@@ -25,7 +26,12 @@ for loadcase in fcase:
         print("\nn = %d") % elements
         he = 1.0/elements
         # print("he = %f") % he
-
+        if loadcase == 'A':
+            heA = he
+        if loadcase == 'B':
+            heB = he
+        if loadcase == 'C':
+            heC = he
         # element-wise stiffness matrix
         ke = (1/he)*np.array([[1, -1],[-1, 1]])
 
@@ -50,6 +56,12 @@ for loadcase in fcase:
         # Add the final piece to the bottom right element of K:
         K[elements-1][elements-1] += ke[0][0]
         print("K = ",K)
+        if loadcase == 'A':
+            KA = K
+        if loadcase == 'B':
+            KB = K
+        if loadcase == 'C':
+            KC = K
 
         # NOTE: The n = 10000 node problem may be solved by simplifying K down in such
         # a way that only the nonzero indices are used.
@@ -96,6 +108,12 @@ for loadcase in fcase:
         print("F = ",F)
 
         d = np.linalg.solve(K,F)
+        if loadcase == 'A':
+            dA = d
+        if loadcase == 'B':
+            dB = d
+        if loadcase == 'C':
+            dC = d
         print("d = ",d)
         # NOTE: this might be correct for the f(x) = c case
 
@@ -119,7 +137,11 @@ i = 0
 for solution in u:
     plt.figure()
     plt.plot(x,solution) # THIS IS A MISTAKE. IT SHOULDN'T BE PLOTTING F, IT SHOULD BE PLOTTING THE EXACT SOLUTION U(X)
-    plt.show()
+    # plt.show()
+
+    # PSEUDO CODE FOR APPROXIMATE SOLUTIONS:
+
+
     # for elements in n:
     #     he = 1.0/elements
     #     for el in range(1,elements+1):
