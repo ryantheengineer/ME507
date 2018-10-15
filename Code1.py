@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pyprind
 
-
+# Linear shape function definitions
 def N1(x1,x2,x):
     u = (x2 - x)/(x2 - x1)
     return u
@@ -28,7 +28,7 @@ for loadcase in fcase:
     for elements in n:
         print("\nn = %d") % elements
         he = 1.0/elements
-        
+
         # element-wise stiffness matrix
         ke = (1/he)*np.array([[1, -1],[-1, 1]])
 
@@ -73,7 +73,7 @@ for loadcase in fcase:
         x2 = 0
         # Solving for the f elementwise vector
         # if f(x) = c:
-        c = 1   # stand-in value for constant c
+        c = 1  # stand-in value for constant c
         for el in range(1,elements): # NOTE:May need to double check this range
             # print("el = %d") % el
             Ftemp = np.zeros([elements,1])  # reset Ftemp back to zeros
@@ -191,7 +191,7 @@ for i in range(len(fcase)):     # NOTE: This may be the wrong range to iterate o
     # step through the elements
     for elements in n:
         he = 1.0/elements
-        for el in range(1,elements):    # NOTE: make sure to account for d11 (end point of element 10) being zero (due to constraint)
+        for el in range(1,elements+1):    # NOTE: make sure to account for d11 (end point of element 10) being zero (due to constraint)
             # for each element, set the endpoint x1 and x2 values
             x1 = (el-1)*he
             x2 = el*he
@@ -199,7 +199,10 @@ for i in range(len(fcase)):     # NOTE: This may be the wrong range to iterate o
             # print("x2 = %f") % x2
             # set d1 and d2 for the given element
             d1 = d[el-1][i]
-            d2 = d[el][i]
+            if d1 == d[-1][i]:
+                d2 = 0
+            else:
+                d2 = d[el][i]
             # print("d1 = %f") %d1
             # print("d2 = %f") %d2
 
@@ -243,9 +246,9 @@ print("\n")
 
 plt.figure()
 plt.plot(x,u[:,0])
-plt.plot(x,uh[:,0])
-plt.plot(x,uh[:,1])
-plt.plot(x,uh[:,2])
+# plt.plot(x,uh[:,0])
+# plt.plot(x,uh[:,1])
+# plt.plot(x,uh[:,2])
 plt.show()
 
     # for elements in n:
