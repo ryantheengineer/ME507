@@ -44,7 +44,7 @@ for i in range(N):
 
 
 
-for i in range(0,3):
+for i in range(0,2):    # NOTE: SHOULD BE (0,3)
     # for each # of elements in n vector
     print("\n")
     print("fcase = ", fcase[i])
@@ -76,7 +76,7 @@ for i in range(0,3):
             # print("K = ", K)
         # Add the final piece to the bottom right element of K:
         K[elements-1][elements-1] += ke[0][0]
-        print("K = ",K)
+        # print("K = ",K)
 
         # Find F
         fe = np.zeros([2,1])
@@ -95,17 +95,14 @@ for i in range(0,3):
             if i == 0:
                 fe[0] = float(c*he/2)
                 fe[1] = float(c*he/2)
-                # print("fe = ",fe)
 
             if i == 1:
-                fe[0] = 1
-                fe[1] = 1
-                # print("fe = ",fe)
+                fe[0] = (1/he)*((x1**3)/3 - (x2*x1**2)/2 + (x2**3)/6)
+                fe[1] = (1/he)*((x1**3)/6 - (x1*x2**2)/2 + (x2**3)/3)
 
             if i == 2:
                 fe[0] = 2
                 fe[1] = 2
-                # print("fe = ",fe)
 
 
             if el == elements:
@@ -119,8 +116,12 @@ for i in range(0,3):
 
         print("F = ",F)
 
-
         # Find d
+        d = np.zeros([elements,1])
+        d = np.linalg.solve(K,F)
+        print("d = ",d)
+
+
         # create uh(x)
         # graph u(x) and uh(x) for the given combination of elements and load case
 
