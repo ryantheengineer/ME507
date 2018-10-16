@@ -15,8 +15,8 @@ def N2(x1,x2,x):
 
 # Establish a list of node numbers:
 # n = [10, 100, 1000, 10000]
-# n = [10,100,1000]
-n = [10]
+n = [10,100,1000]
+# n = [10]
 
 
 # Create structure of cases or iterations that go through the different cases
@@ -42,6 +42,8 @@ for i in range(N):
     u[i,1] = uB[i]
     u[i,2] = uC[i]
 
+
+
 for i in range(0,3):
     # for each # of elements in n vector
     print("\n")
@@ -49,6 +51,10 @@ for i in range(0,3):
     print("\n")
 
     for elements in n:
+        print("\n")
+        print("elements = ", elements)
+        print("\n")
+
         # Find K
         he = 1/float(elements)
         ke = (1/he)*np.array([[1, -1],[-1, 1]])
@@ -72,9 +78,48 @@ for i in range(0,3):
         K[elements-1][elements-1] += ke[0][0]
         print("K = ",K)
 
-
-
         # Find F
+        fe = np.zeros([2,1])
+        F = np.zeros([elements,1])
+        x1 = 0
+        x2 = 0
+
+        # cycle through elements and solve for fe
+        for el in range(1,elements+1):
+            Ftemp = np.zeros([elements,1])
+
+            # print("element # %d") % el
+            x1 = he*(el-1)
+            x2 = he*el
+
+            if i == 0:
+                fe[0] = float(c*he/2)
+                fe[1] = float(c*he/2)
+                # print("fe = ",fe)
+
+            if i == 1:
+                fe[0] = 1
+                fe[1] = 1
+                # print("fe = ",fe)
+
+            if i == 2:
+                fe[0] = 2
+                fe[1] = 2
+                # print("fe = ",fe)
+
+
+            if el == elements:
+                Ftemp[-1] = fe[0]
+            else:
+                Ftemp[el-1] = fe[0]
+                Ftemp[el] = fe[1]
+
+            # print("Ftemp = ",Ftemp)
+            F += Ftemp
+
+        print("F = ",F)
+
+
         # Find d
         # create uh(x)
         # graph u(x) and uh(x) for the given combination of elements and load case
