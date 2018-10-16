@@ -24,6 +24,7 @@ n = [10,100,1000]
 fcase = ['A','B','C']
 c = 1
 
+# Step through the different f(x) definitions
 for i in range(0,3):    # NOTE: SHOULD BE (0,3)
     N = 10*n[i]
     x = np.linspace(0,1,N,endpoint=True)
@@ -45,9 +46,10 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
 
     # for each # of elements in n vector
     print("\n")
-    print("fcase = ", fcase[i])
     print("\n")
+    print("fcase = ", fcase[i])
 
+    # Step through the increasing numbers of elements for the chosen f(x)
     for elements in n:
         print("\n")
         print("elements = ", elements)
@@ -142,8 +144,15 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
                     uh[j] += 0
 
         print("uh = ",np.shape(uh))
-        # graph u(x) and uh(x) for the given combination of elements and load case
 
+
+        # Plot u(x) and uh(x) for the given combination of elements and load case
+
+        # NOTE: add some way to make titles, labels, and legends populate appropriately
+        plt.figure()
+        plt.plot(x,u[:,i])
+        plt.plot(x,uh,'--')
+        plt.show()
 
 
 
