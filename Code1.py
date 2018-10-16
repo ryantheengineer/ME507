@@ -24,27 +24,25 @@ n = [10,100,1000]
 fcase = ['A','B','C']
 c = 1
 
-N = 100
-x = np.linspace(0,1,N,endpoint=True)
-uA = np.zeros([len(x),1])
-uB = np.zeros([len(x),1])
-uC = np.zeros([len(x),1])
-for i in range(len(uA)):
-    uA[i] = 0.5*c**2 - 0.5*c*x[i]**2
-for i in range(len(uB)):
-    uB[i] = (1/6.)*(1 - x[i]**3)
-for i in range(len(uC)):
-    uC[i] = (1/12.)*(1 - x[i]**4)
+for i in range(0,3):    # NOTE: SHOULD BE (0,3)
+    N = 10*n[i]
+    x = np.linspace(0,1,N,endpoint=True)
+    uA = np.zeros([len(x),1])
+    uB = np.zeros([len(x),1])
+    uC = np.zeros([len(x),1])
+    for k in range(len(uA)):
+        uA[k] = 0.5*c**2 - 0.5*c*x[k]**2
+    for k in range(len(uB)):
+        uB[k] = (1/6.)*(1 - x[k]**3)
+    for k in range(len(uC)):
+        uC[k] = (1/12.)*(1 - x[k]**4)
 
-u = np.zeros([N,3])
-for i in range(N):
-    u[i,0] = uA[i]
-    u[i,1] = uB[i]
-    u[i,2] = uC[i]
+    u = np.zeros([N,3])
+    for k in range(N):
+        u[k,0] = uA[k]
+        u[k,1] = uB[k]
+        u[k,2] = uC[k]
 
-
-
-for i in range(1,3):    # NOTE: SHOULD BE (0,3)
     # for each # of elements in n vector
     print("\n")
     print("fcase = ", fcase[i])
@@ -114,15 +112,36 @@ for i in range(1,3):    # NOTE: SHOULD BE (0,3)
             # print("Ftemp = ",Ftemp)
             F += Ftemp
 
-        print("F = ",F)
+        # print("F = ",F)
 
         # Find d
         d = np.zeros([elements,1])
         d = np.linalg.solve(K,F)
-        print("d = ",d)
+        # print("d = ",d)
 
 
         # create uh(x)
+        uh = np.zeros([len(x),1])
+        for el in range(1,elements+1):
+            x1 = he*(el-1)
+            x2 = he*el
+
+            # set d1 and d2 for the given element
+            d1 = d[el-1]
+            if d1 == d[-1]:
+                d2 = 0
+            else:
+                d2 = d[el]
+
+            for j in range(len(x)):
+                if x[j] >= x1 and x[j] < x2:
+                    # print(x[j])
+                    uh[j] += d1*N1(x1,x2,x[j]) + d2*N2(x1,x2,x[j])
+                    # print(uh[j][i])
+                else:
+                    uh[j] += 0
+
+        print("uh = ",np.shape(uh))
         # graph u(x) and uh(x) for the given combination of elements and load case
 
 
