@@ -41,7 +41,8 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
         print("\n")
 
         N = 10*elements
-        x = np.linspace(0,1,N,endpoint=True)
+        x = np.linspace(0,1,N,endpoint=False)
+
         uA = np.zeros([len(x),1])
         uB = np.zeros([len(x),1])
         uC = np.zeros([len(x),1])
@@ -126,8 +127,8 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
 
 
         # create uh(x)
-        uh = np.zeros([len(x),1])
-        print("uh = ",np.shape(uh))
+        uh = np.zeros(len(x))
+        # print("uh = ",np.shape(uh))
 
         for el in range(1,elements+1):
             x1 = he*(el-1)
@@ -151,26 +152,69 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
         # for el in range(1,elements+1):
         #     x1 = he*el(-1)
 
-        slope = np.zeros(len(uh))
-        for m in range(len(slope)-1):
-            slope[m] = (uh[m+1]-uh[m])/(x[m+1]-x[m])
-        print("uh = ",np.shape(uh))
-        print(slope)
-        # error = np.zeros(len(x))
-        # for m in range(len(error)):
-        #     error[m] = uh[m]-u[m,i]
+        # slope = np.zeros(len(uh))
+        # for m in range(len(slope)-1):
+        #     slope[m] = (uh[m+1]-uh[m])/(x[m+1]-x[m])
+        # print("uh = ",np.shape(uh))
+        # print(slope)
+        error = np.zeros(len(x))
+        for m in range(len(error)):
+            error[m] = uh[m]-u[m,i]
+
         # Plot u(x) and uh(x) for the given combination of elements and load case
         title = ("FEA solution for load case " + fcase[i] + " with "
             + str(elements) + " elements")
-        # NOTE: add some way to make titles, labels, and legends populate appropriately
-        plt.figure()
-        plt.title(title)
-        plt.xlabel("Linear position along beam (x)")
-        plt.ylabel("Displacement (u)")
+
+        # plt.figure(1)
+        # plt.title(title)
+        # plt.xlabel("Linear position along beam (x)")
+        # plt.ylabel("Displacement (u)")
         # plt.plot(x,u[:,i],label='u(x)',linewidth=1,color='r')
-        plt.plot(x,uh,label='uh(x)',linewidth=1,color='b',linestyle='-')
-        plt.plot(x,slope)
-        plt.legend()
+        # plt.plot(x,uh,label='uh(x)',linewidth=1,color='b',linestyle='-')
+        # # plt.plot(x,slope)
+        # plt.legend()
         # plt.figure(2)
-        # plt.plot(x,error,'.-')
-        plt.show()
+        # plt.plot(x,error)
+        # plt.show()
+
+
+        ## Part 2: Compute global error ##
+        # Given constants for computing error integral with 3-point Gauss quad.
+        ksi = np.array([-np.sqrt(3./5.), 0, np.sqrt(3./5.)])
+        w = np.array([5./9., 8./9., 5./9.])
+        globerr = 0         # integral of error over entire beam
+        dxksidksi = he/2    # constant required for integration
+        uinterp = 0
+        uhinterp = 0
+
+        for el in range(1,elements+1):
+            for p in range(0,3):
+                # Need to interpolate the value for u and uh at the current
+                # value of ksi to give to the integration function.
+                # print('shape of x: ',np.shape(x))
+                # print('shape of u: ',np.shape(u))
+                # print('shape of uh: ',np.shape(uh))
+                x1 = he*(el-1)
+                x2 = he*el
+                # xpoints = [x1,x2]
+                # ksipoints = [-1,1]
+                # Given the ksi values (which don't change), map those to the
+                # appropriate x value found in the given element
+                ksiinterp = 0
+                xinterp = 0
+                ksiinterp = (ksi[p] + 1)/2. # Normalize ksi value on parent domain
+                # ksi in geometric domain, ready for interpolation
+                xinterp = x1 + ksiinterp*(x2 - x1)
+
+                uinterp = np.interp(xinterp, x, u[:,p])
+                uhinterp = np.interp(xinterp, x, uh)
+
+                globerr += dxksidksi*w[p]*(np.abs(uinterp-uhinterp))**2
+                # print("globerr = %f") % globerr
+            # print("uinterp = ",uinterp)
+            # print("uhinterp = ",uhinterp)
+            # print("uinterp - uhinterp = ", uinterp-uhinterp)
+
+        print("globerr = %f") % globerr
+        globerr = np.sqrt(globerr)
+        print("globerr = %f") % globerr
