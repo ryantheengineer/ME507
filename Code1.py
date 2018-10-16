@@ -44,7 +44,7 @@ for i in range(N):
 
 
 
-for i in range(0,2):    # NOTE: SHOULD BE (0,3)
+for i in range(1,3):    # NOTE: SHOULD BE (0,3)
     # for each # of elements in n vector
     print("\n")
     print("fcase = ", fcase[i])
@@ -101,8 +101,8 @@ for i in range(0,2):    # NOTE: SHOULD BE (0,3)
                 fe[1] = (1/he)*((x1**3)/6 - (x1*x2**2)/2 + (x2**3)/3)
 
             if i == 2:
-                fe[0] = 2
-                fe[1] = 2
+                fe[0] = (1/he)*((x1**4)/4 - (x2*x1**3)/3 + (x2**4)/12)
+                fe[1] = (1/he)*((x1**4)/12 - (x1*x2**3)/3 + (x2**4)/4)
 
 
             if el == elements:
