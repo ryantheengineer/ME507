@@ -22,8 +22,9 @@ n = [10]
 # Create structure of cases or iterations that go through the different cases
 # where the definition of f changes
 fcase = ['A','B','C']
+c = 1
 
-N = 1000
+N = 100
 x = np.linspace(0,1,N,endpoint=True)
 uA = np.zeros([len(x),1])
 uB = np.zeros([len(x),1])
@@ -41,15 +42,55 @@ for i in range(N):
     u[i,1] = uB[i]
     u[i,2] = uC[i]
 
-for i in range(len(loadcase)):
-    # create the appropriate u(x) with a fine x vector for plotting and interpolation
-    u = u[:,i]
+for i in range(0,3):
     # for each # of elements in n vector
+    print("\n")
+    print("fcase = ", fcase[i])
+    print("\n")
+
+    for elements in n:
         # Find K
+        he = 1/float(elements)
+        ke = (1/he)*np.array([[1, -1],[-1, 1]])
+        # Assemble the k element wise stiffness matrices into a global K matrix
+        K = np.zeros([elements,elements])
+        Ktemp = np.zeros([elements,elements])
+        # Here we need to map the parts of ke onto the global matrix K
+        for j in range(0,elements-1):
+            # Locate the ke matrix in the global matrix
+            Ktemp = np.zeros([elements,elements])
+            Ktemp[j][j] = ke[0][0]
+            Ktemp[j][j+1] = ke[0][1]
+            Ktemp[j+1][j] = ke[1][0]
+            Ktemp[j+1][j+1] = ke[1][1]
+            # print("Ktemp = ",Ktemp)
+
+            # Add Ktemp into the global matrix
+            K += Ktemp
+            # print("K = ", K)
+        # Add the final piece to the bottom right element of K:
+        K[elements-1][elements-1] += ke[0][0]
+        print("K = ",K)
+
+
+
         # Find F
         # Find d
         # create uh(x)
         # graph u(x) and uh(x) for the given combination of elements and load case
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
