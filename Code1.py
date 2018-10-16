@@ -22,27 +22,12 @@ n = [10,100,1000]
 # Create structure of cases or iterations that go through the different cases
 # where the definition of f changes
 fcase = ['A','B','C']
+
 c = 1
 
 # Step through the different f(x) definitions
 for i in range(0,3):    # NOTE: SHOULD BE (0,3)
-    N = 10*n[i]
-    x = np.linspace(0,1,N,endpoint=True)
-    uA = np.zeros([len(x),1])
-    uB = np.zeros([len(x),1])
-    uC = np.zeros([len(x),1])
-    for k in range(len(uA)):
-        uA[k] = 0.5*c**2 - 0.5*c*x[k]**2
-    for k in range(len(uB)):
-        uB[k] = (1/6.)*(1 - x[k]**3)
-    for k in range(len(uC)):
-        uC[k] = (1/12.)*(1 - x[k]**4)
 
-    u = np.zeros([N,3])
-    for k in range(N):
-        u[k,0] = uA[k]
-        u[k,1] = uB[k]
-        u[k,2] = uC[k]
 
     # for each # of elements in n vector
     print("\n")
@@ -54,6 +39,24 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
         print("\n")
         print("elements = ", elements)
         print("\n")
+
+        N = 10*elements
+        x = np.linspace(0,1,N,endpoint=True)
+        uA = np.zeros([len(x),1])
+        uB = np.zeros([len(x),1])
+        uC = np.zeros([len(x),1])
+        for k in range(len(uA)):
+            uA[k] = 0.5*c**2 - 0.5*c*x[k]**2
+        for k in range(len(uB)):
+            uB[k] = (1/6.)*(1 - x[k]**3)
+        for k in range(len(uC)):
+            uC[k] = (1/12.)*(1 - x[k]**4)
+
+        u = np.zeros([N,3])
+        for k in range(N):
+            u[k,0] = uA[k]
+            u[k,1] = uB[k]
+            u[k,2] = uC[k]
 
         # Find K
         he = 1/float(elements)
@@ -124,6 +127,8 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
 
         # create uh(x)
         uh = np.zeros([len(x),1])
+        print("uh = ",np.shape(uh))
+
         for el in range(1,elements+1):
             x1 = he*(el-1)
             x2 = he*el
@@ -143,15 +148,31 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
                 else:
                     uh[j] += 0
 
+        # for el in range(1,elements+1):
+        #     x1 = he*el(-1)
+
+        slope = np.zeros(len(uh))
+        for m in range(len(slope)-1):
+            slope[m] = (uh[m+1]-uh[m])/(x[m+1]-x[m])
         print("uh = ",np.shape(uh))
-
-
+        print(slope)
+        # error = np.zeros(len(x))
+        # for m in range(len(error)):
+        #     error[m] = uh[m]-u[m,i]
         # Plot u(x) and uh(x) for the given combination of elements and load case
-
+        title = ("FEA solution for load case " + fcase[i] + " with "
+            + str(elements) + " elements")
         # NOTE: add some way to make titles, labels, and legends populate appropriately
         plt.figure()
-        plt.plot(x,u[:,i])
-        plt.plot(x,uh,'--')
+        plt.title(title)
+        plt.xlabel("Linear position along beam (x)")
+        plt.ylabel("Displacement (u)")
+        # plt.plot(x,u[:,i],label='u(x)',linewidth=1,color='r')
+        plt.plot(x,uh,label='uh(x)',linewidth=1,color='b',linestyle='-')
+        plt.plot(x,slope)
+        plt.legend()
+        # plt.figure(2)
+        # plt.plot(x,error,'.-')
         plt.show()
 
 
