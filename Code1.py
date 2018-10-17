@@ -165,17 +165,17 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
         title = ("FEA solution for load case " + fcase[i] + " with "
             + str(elements) + " elements")
 
-        # plt.figure(1)
-        # plt.title(title)
-        # plt.xlabel("Linear position along beam (x)")
-        # plt.ylabel("Displacement (u)")
-        # plt.plot(x,u[:,i],label='u(x)',linewidth=1,color='r')
-        # plt.plot(x,uh,label='uh(x)',linewidth=1,color='b',linestyle='-')
-        # # plt.plot(x,slope)
-        # plt.legend()
-        # plt.figure(2)
-        # plt.plot(x,error)
-        # plt.show()
+        plt.figure(1)
+        plt.title(title)
+        plt.xlabel("Linear position along beam (x)")
+        plt.ylabel("Displacement (u)")
+        plt.plot(x,u[:,i],label='u(x)',linewidth=1,color='r')
+        plt.plot(x,uh,label='uh(x)',linewidth=1,color='b',linestyle='-')
+        # plt.plot(x,slope)
+        plt.legend()
+        plt.figure(2)
+        plt.plot(x,error)
+        plt.show()
 
 
         ## Part 2: Compute global error ##
@@ -196,18 +196,19 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
                 # print('shape of uh: ',np.shape(uh))
                 x1 = he*(el-1)
                 x2 = he*el
-                # xpoints = [x1,x2]
-                # ksipoints = [-1,1]
+                xpoints = [x1,x2]
+                ksipoints = [-1,1]
                 # Given the ksi values (which don't change), map those to the
                 # appropriate x value found in the given element
                 ksiinterp = 0
-                xinterp = 0
-                ksiinterp = (ksi[p] + 1)/2. # Normalize ksi value on parent domain
+                # xinterp = 0
+                # ksiinterp = (ksi[p] + 1)/2. # Normalize ksi value on parent domain
+                ksiinterp = np.interp(ksi[p],ksipoints,xpoints)
                 # ksi in geometric domain, ready for interpolation
-                xinterp = x1 + ksiinterp*(x2 - x1)
+                # xinterp = x1 + ksiinterp*(x2 - x1)
 
-                uinterp = np.interp(xinterp, x, u[:,p])
-                uhinterp = np.interp(xinterp, x, uh)
+                uinterp = np.interp(ksiinterp, x, u[:,p])
+                uhinterp = np.interp(ksiinterp, x, uh)
 
                 globerr += dxksidksi*w[p]*(np.abs(uinterp-uhinterp))**2
                 # print("globerr = %f") % globerr
