@@ -23,8 +23,8 @@ def LM(a,e,n):        # a needs to be a 2x1 vector containing 1,2
 
 # Establish a list of node numbers:
 # n = [10, 100, 1000, 10000]
-n = [10,100,1000]
-# n = [10]
+# n = [10,100,1000]
+n = [10]
 
 
 # Create structure of cases or iterations that go through the different cases
@@ -48,6 +48,7 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
 
         N = 10*elements + 1
         x = np.linspace(0,1,N,endpoint=True)
+        print("x = ",x)
 
         uA = np.zeros([len(x),1])
         uB = np.zeros([len(x),1])
@@ -121,27 +122,82 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
 
 
         # create uh(x)
-        uh = np.zeros(len(x))
+        nn = 10
+        uhe = np.zeros([nn,1])
+        uh = np.zeros([len(x),1])
+        ksipoints = [-1,1]
         # print("uh = ",np.shape(uh))
 
-        for e in range(1,elements+1):
+        # Pseudo-code for uh:
+        # Create vector in parent domain that is the same length as the
+        # number of x values in an element in the x domain
+        ksi = np.linspace(ksipoints[0], ksipoints[1], nn, endpoint = False)
+        print("ksi = ",ksi)
+        for e in range(1,elements + 1):
+        # Solve for uhe (uh for a given element)
             x1 = he*(e-1)
             x2 = he*e
+            xpoints = [x1,x2]
+            # Find index of first x value in this element
+            # xindex = np.searchsorted(x,x1) # NOTE: this may not be full functional
 
-            # set d1 and d2 for the given element
+            xindex = list(x).index(x1)
+            # xindex = int(xindex[0])
+            print("xindex = ",xindex)
+
             d1 = d[e-1]
             if d1 == d[-1]:
                 d2 = 0
             else:
                 d2 = d[e]
+            print("d1 = ",d1)
+            print("d2 = ",d2)
+            # # Interpolate to get element ksi vector
+            # for j in range(len(ksi)):
+            #     ksi[j] = np.interp()
 
-            for j in range(len(x)):
-                if x[j] >= x1 and x[j] < x2:
-                    # print(x[j])
-                    uh[j] += d1*N1(x1,x2,x[j]) + d2*N2(x1,x2,x[j])
-                    # print(uh[j][i])
-                else:
-                    uh[j] += 0
+            for j in range(len(ksi)):
+                uhe[j] += d1*N1(-1, 1, ksi[j]) + d2*N2(-1, 1, ksi[j])
+
+            # print("uhe = ",uhe)
+            for k in range(xindex,xindex + nn):
+                uh[k] = uhe[k-xindex]
+
+        print("uh = ",uh)
+            # Find a way to sum in uhe at the right location in uh
+            # Add uhe into the uh vector that's the same size as x
+
+
+
+            #
+            # for k in range(len(x)):
+            #         if x[k] >= x1 and x[k] < x2:
+            #             # print(x[j])
+            #             uh[j] += d1*N1(x1,x2,x[j]) + d2*N2(x1,x2,x[j])
+            #             # print(uh[j][i])
+            #         else:
+            #             uh[j] += 0
+            #
+            #
+
+        # for e in range(1,elements+1):
+        #     x1 = he*(e-1)
+        #     x2 = he*e
+        #
+        #     # set d1 and d2 for the given element
+        #     d1 = d[e-1]
+        #     if d1 == d[-1]:
+        #         d2 = 0
+        #     else:
+        #         d2 = d[e]
+        #
+        #     for j in range(len(x)):
+        #         if x[j] >= x1 and x[j] < x2:
+        #             # print(x[j])
+        #             uh[j] += d1*N1(x1,x2,x[j]) + d2*N2(x1,x2,x[j])
+        #             # print(uh[j][i])
+        #         else:
+        #             uh[j] += 0
 
 
         error = np.zeros(len(x))
@@ -163,51 +219,51 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
         plt.legend()
         plt.figure(2)
         plt.plot(x,error)
-        # plt.show()
+        plt.show()
 
-        ## Part 2: Compute global error ##
-        # Given constants for computing error integral with 3-point Gauss quad.
-        ksi = np.array([-np.sqrt(3./5.), 0, np.sqrt(3./5.)])
-        w = np.array([5./9., 8./9., 5./9.])
-        globerr = 0         # integral of error over entire beam
-        dxksidksi = he/2    # constant required for integration
-        uinterp = 0
-        uhinterp = 0
-        xe = 0
-        d1 = 0
-        d2 = 0
-
-        for el in range(1,elements+1):
-            for p in range(0,3):
-                # We need u(xe(ksi[i])) and uh(ksi[i])
-                x1 = he*(el-1)
-                x2 = he*el
-                # xpoints = [x1,x2]
-                ksipoints = [-1,1]
-                xe = (x1*N1(ksipoints[0],ksipoints[1],ksi[p])
-                    + x2*N2(ksipoints[0],ksipoints[1],ksi[p]))
-                # print("xe = ", xe)
-                uinterp = np.interp(xe, x, u[:,p])
-
-                d1 = d[el-1]
-                if d1 == d[-1]:
-                    d2 = 0
-                else:
-                    d2 = d[el]
-
-                uhinterp = (d1*N1(ksipoints[0],ksipoints[1],ksi[p])
-                        + d2*N2(ksipoints[0],ksipoints[1],ksi[p]))
-
-
-                globerr += dxksidksi*w[p]*(np.abs(uinterp-uhinterp))**2
-                # print("globerr = %f") % globerr
-            # print("uinterp = ",uinterp)
-            # print("uhinterp = ",uhinterp)
-            # print("uinterp - uhinterp = ", uinterp-uhinterp)
-
+        # ## Part 2: Compute global error ##
+        # # Given constants for computing error integral with 3-point Gauss quad.
+        # ksi = np.array([-np.sqrt(3./5.), 0, np.sqrt(3./5.)])
+        # w = np.array([5./9., 8./9., 5./9.])
+        # globerr = 0         # integral of error over entire beam
+        # dxksidksi = he/2    # constant required for integration
+        # uinterp = 0
+        # uhinterp = 0
+        # xe = 0
+        # d1 = 0
+        # d2 = 0
+        #
+        # for el in range(1,elements+1):
+        #     for p in range(0,3):
+        #         # We need u(xe(ksi[i])) and uh(ksi[i])
+        #         x1 = he*(el-1)
+        #         x2 = he*el
+        #         # xpoints = [x1,x2]
+        #         ksipoints = [-1,1]
+        #         xe = (x1*N1(ksipoints[0],ksipoints[1],ksi[p])
+        #             + x2*N2(ksipoints[0],ksipoints[1],ksi[p]))
+        #         # print("xe = ", xe)
+        #         uinterp = np.interp(xe, x, u[:,p])
+        #
+        #         d1 = d[el-1]
+        #         if d1 == d[-1]:
+        #             d2 = 0
+        #         else:
+        #             d2 = d[el]
+        #
+        #         uhinterp = (d1*N1(ksipoints[0],ksipoints[1],ksi[p])
+        #                 + d2*N2(ksipoints[0],ksipoints[1],ksi[p]))
+        #
+        #
+        #         globerr += dxksidksi*w[p]*(np.abs(uinterp-uhinterp))**2
+        #         # print("globerr = %f") % globerr
+        #     # print("uinterp = ",uinterp)
+        #     # print("uhinterp = ",uhinterp)
+        #     # print("uinterp - uhinterp = ", uinterp-uhinterp)
+        #
+        # # print("globerr = %f") % globerr
+        # globerr = np.sqrt(globerr)
         # print("globerr = %f") % globerr
-        globerr = np.sqrt(globerr)
-        print("globerr = %f") % globerr
 
 
 
