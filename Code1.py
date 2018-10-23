@@ -15,7 +15,7 @@ def LM(a,e,n):        # a needs to be a 2x1 vector containing 1,2
         A = e
     if a == 2:
         A = e + 1
-    if e == n and a == 2:   # NOTE: check this to make sure indices are handled correctly
+    if e == n and a == 2:
         A = 0
     return A
 
@@ -24,16 +24,14 @@ def LM(a,e,n):        # a needs to be a 2x1 vector containing 1,2
 n = [10,100,1000]
 # n = [10]
 
-
 # Create structure of cases or iterations that go through the different cases
 # where the definition of f changes
 fcase = ['A','B','C']
 
-c = 1
+c = 1   # Arbitrary constant for load case A
 
 # Step through the different f(x) definitions
-for i in range(0,3):    # NOTE: SHOULD BE (0,3)
-    # for each # of elements in n vector
+for i in range(0,3):
     print('\n')
     print('\n')
     print('fcase = ', fcase[i])
@@ -45,12 +43,11 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
         print('n = ', elements)
         print('\n')
         N = 10
-        uh = np.zeros([1,1])	# Remember to delete the 0 at the beginning
+        uh = np.zeros([1,1])
         uhtemp = np.zeros([N,1])
         x = np.zeros([1,1])
         xtemp = np.zeros([N,1])
         he = 1/float(elements)
-        # print('he = ',he)
 
         # Pull back Ke
         fe = np.zeros([2,1])
@@ -80,7 +77,6 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
                 f2 = x2**2
             fe[0] = (he/6)*(2*f1 + f2)
             fe[1] = (he/6)*(f1 + 2*f2)
-            # print('fe = ',fe)
 
             # Assemble Ke and fe into K and F
             for a in range(1,3):
@@ -95,27 +91,13 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
 
                 F[LM(a,e,elements)-1] += fe[a-1]
 
-        # print('F = ',F)
-        # print('K = ',K)
         d = np.zeros([elements,1])
         d = np.linalg.solve(K,F)
-        # np.append(d, [[0]], axis=0)
+        # print('K = ',K)
+        # print('F = ',F)
         # print('d = ',d)
 
-        #############################################################
-        ## GOOD UP TO THIS POINT! ##
-        ############################################################
-
-
-        # create uh(x)
-        # uh = np.zeros(len(x))
-        # print('uh = ',np.shape(uh))
-
-        # Create ksi vector to build x global vectors off:
         ksi = np.linspace(-1,1,N,endpoint=False)
-        # print('ksi length = ',np.shape(ksi))
-        # print(ksi)
-
 
         for e in range(1,elements+1):
             x1 = he*(e-1)
@@ -125,8 +107,8 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
             for k in range(len(ksi)):
                 xtemp[k] = x1 + k*xstep
             x = np.append(x,xtemp,axis=0)
-            # print('x = ',x)
             uhtemp = np.zeros([N,1])
+
             # set d1 and d2 for the given element
             d1 = d[e-1]
             if d1 == d[-1]:
@@ -135,15 +117,11 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
                 d2 = d[e]
             for k in range(len(ksi)):
                 uhtemp[k] = 0.5*d1*(1-ksi[k]) + 0.5*d2*(1+ksi[k])
-            # print('uhtemp is ',np.shape(uhtemp))
+
             uh = np.append(uh,uhtemp,axis=0)
-            # print('uhtemp = ',uhtemp)
-        # print('\n')
+
         uh = np.delete(uh,0,0)
-        # print('\n')
         x = np.delete(x,0,0)
-        # print('uh = ',uh)
-        # print('x = ',x)
 
         u = np.zeros([len(x),1])
         if i == 0:
@@ -155,25 +133,10 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
         if i == 2:
             for j in range(len(x)):
                 u[j] = (1/12.)*(1 - x[j]**4)
-        # print('\n')
-        # print('u = ',u)
 
-        # uhend = np.array([[0]])
-        # uh = np.append(uh,uhend,axis=0) # might not need this, but it could be convenient
-        # uh = np.delete(uh,0,0)
-
-        # print('uh = ',uh)
-
-        error = np.zeros([len(x),1])
-        for m in range(len(error)):
-            error[m] = uh[m]-u[m]
-        # print('\n')
-        # print('error = ',error)
-
-        # Plot u(x) and uh(x) for the given combination of elements and load case
+        # Plot u(x) and uh(x) for the given combination of elements and load
         title = ('FEA solution for load case ' + fcase[i] + ' with '
             + str(elements) + ' elements')
-
         plt.figure()
         plt.title(title)
         plt.xlabel('Linear position along beam (x)')
@@ -184,7 +147,7 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
         plt.show()
 
 
-
+        #######################################################################
         ## Part 2: Compute global error ##
         # Given constants for computing error integral with 3-point Gauss quad.
         ksii = [-np.sqrt(3./5.), 0, np.sqrt(3./5.)]
@@ -218,7 +181,7 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
             for j in range(0,3):
                 uhe[j] = 0.5*d1*(1-ksii[j]) + 0.5*d2*(1+ksii[j])
 
-            # Now take components and perform Gauss quadrature for the current element:
+            # Perform Gauss quadrature for the current element:
             diff = np.zeros([3,1])
             for j in range(0,3):
                 diff[j] = ue[j] - uhe[j]
@@ -231,7 +194,7 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
             for j in range(0,3):
                 gauss[j] = ab2[j]*0.5*he*wi[j]
 
-            # sum up and add to global error
+            # Sum up and add to global error
             total = 0
             for j in range(0,3):
                 total += gauss[j]	# element total error
@@ -239,7 +202,7 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
         globerr = np.sqrt(globerr)
         print('global error = ',globerr)
 
-
+        #######################################################################
         ## Part 3: Log-log plot ##
         if count == 0:
             evector[0] = globerr
@@ -255,7 +218,7 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
     convergence = (np.log10(evector[-1]/evector[0]))/(np.log10(n[-1]/n[0]))
     print("convergence = ",convergence)
     plt.figure()
-    plt.title('Rate of convergence, Case ' + fcase[i])
+    plt.title('Rate of convergence for load case ' + fcase[i])
     plt.xlabel('Number of elements (n)')
     plt.ylabel('Global error (e)')
     plt.text(200,0.0001,'Rate of convergence = '+str(convergence),horizontalalignment='center')
