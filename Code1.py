@@ -37,7 +37,8 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
     print('\n')
     print('\n')
     print('fcase = ', fcase[i])
-
+    evector = np.zeros([len(n),1])
+    count = 0
     # Step through the increasing numbers of elements for the chosen f(x)
     for elements in n:
         print('\n')
@@ -104,18 +105,18 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
         #############################################################
         ## GOOD UP TO THIS POINT! ##
         ############################################################
-        
-        
+
+
         # create uh(x)
         # uh = np.zeros(len(x))
         # print('uh = ',np.shape(uh))
-        
+
         # Create ksi vector to build x global vectors off:
         ksi = np.linspace(-1,1,N,endpoint=False)
         # print('ksi length = ',np.shape(ksi))
         # print(ksi)
-        
-        
+
+
         for e in range(1,elements+1):
             x1 = he*(e-1)
             x2 = he*e
@@ -143,7 +144,7 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
         x = np.delete(x,0,0)
         # print('uh = ',uh)
         # print('x = ',x)
-          
+
         u = np.zeros([len(x),1])
         if i == 0:
             for j in range(len(x)):
@@ -156,13 +157,13 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
                 u[j] = (1/12.)*(1 - x[j]**4)
         # print('\n')
         # print('u = ',u)
-        
+
         # uhend = np.array([[0]])
         # uh = np.append(uh,uhend,axis=0) # might not need this, but it could be convenient
         # uh = np.delete(uh,0,0)
-        
+
         # print('uh = ',uh)
-				
+
         error = np.zeros([len(x),1])
         for m in range(len(error)):
             error[m] = uh[m]-u[m]
@@ -173,17 +174,16 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
         title = ('FEA solution for load case ' + fcase[i] + ' with '
             + str(elements) + ' elements')
 
-        # plt.figure()
-        # plt.title(title)
-        # plt.xlabel('Linear position along beam (x)')
-        # plt.ylabel('Displacement (u)')
-        # plt.plot(x,u,label='u(x)',linewidth=1,color='r')
-        # plt.plot(x,uh,label='uh(x)',linewidth=1,color='b',linestyle='-')
-        # plt.plot(x,slope)
-        # plt.legend()
-        #plt.figure(2)
-        # plt.plot(x,error)
-        # plt.show()
+        plt.figure()
+        plt.title(title)
+        plt.xlabel('Linear position along beam (x)')
+        plt.ylabel('Displacement (u)')
+        plt.plot(x,u,label='u(x)',linewidth=1,color='r')
+        plt.plot(x,uh,label='uh(x)',linewidth=1,color='b',linestyle='--')
+        plt.legend()
+        plt.show()
+
+
 
         ## Part 2: Compute global error ##
         # Given constants for computing error integral with 3-point Gauss quad.
@@ -204,7 +204,7 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
             uhe = np.zeros([3,1])
             for j in range(0,3):
                 xei[j] = x1*0.5*(1 - ksii[j]) + x2*0.5*(1 + ksii[j])
-            
+
             if i == 0:
                 for j in range(0,3):
                     ue[j] = 0.5*c**2 - 0.5*c*xei[j]**2
@@ -214,27 +214,50 @@ for i in range(0,3):    # NOTE: SHOULD BE (0,3)
             if i == 2:
                 for j in range(0,3):
                     ue[j] = (1/12.)*(1 - xei[j]**4)
-            
+
             for j in range(0,3):
                 uhe[j] = 0.5*d1*(1-ksii[j]) + 0.5*d2*(1+ksii[j])
-            
+
             # Now take components and perform Gauss quadrature for the current element:
             diff = np.zeros([3,1])
             for j in range(0,3):
                 diff[j] = ue[j] - uhe[j]
-            
+
             ab2 = np.zeros([3,1])
             for j in range(0,3):
                 ab2[j] = (np.abs(diff[j]))**2
-            
+
             gauss = np.zeros([3,1])
             for j in range(0,3):
                 gauss[j] = ab2[j]*0.5*he*wi[j]
-            
+
             # sum up and add to global error
             total = 0
             for j in range(0,3):
                 total += gauss[j]	# element total error
             globerr += total
-        
+        globerr = np.sqrt(globerr)
         print('global error = ',globerr)
+
+
+        ## Part 3: Log-log plot ##
+        if count == 0:
+            evector[0] = globerr
+        if count == 1:
+            evector[1] = globerr
+        if count == 2:
+            evector[2] = globerr
+        if count == 3:
+            evector[3] = globerr
+        count += 1
+
+    convergence = 0
+    convergence = (np.log10(evector[-1]/evector[0]))/(np.log10(n[-1]/n[0]))
+    print("convergence = ",convergence)
+    plt.figure()
+    plt.title('Rate of convergence, Case ' + fcase[i])
+    plt.xlabel('Number of elements (n)')
+    plt.ylabel('Global error (e)')
+    plt.text(200,0.0001,'Rate of convergence = '+str(convergence),horizontalalignment='center')
+    plt.loglog(n,evector,linestyle='--',marker='o')
+    plt.show()
