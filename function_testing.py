@@ -12,8 +12,8 @@ from Code2 import knot
 # Convert to B-spline:
 # for each element:
     # assemble vector of
-nel = 5
-p = 2
+nel = 10
+p = 1
 
 plt.figure()
 for e in range(1,nel+1):

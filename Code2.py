@@ -151,7 +151,9 @@ def Bspline(e,p,nel,ksi):   # give it a ksi vector like the one below
             # This gives us our len(ksi)x3 or len(ksi)x4 arrays of Bezier curve
             # interpolation values in the parent domain. Next we need to convert
             # these into B-splines
-
+    if p == 1:
+        Ce = np.array([[1, 0],
+                       [0, 1]])
     if p == 2:
         Ce = Ce2(e,nel)
     if p == 3:
