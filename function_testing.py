@@ -6,15 +6,32 @@ from Code2 import Bap
 from Code2 import Bspline
 from Code2 import knot
 
-# p = 1
-# s = knot(p,nel)
+nel = 10
+p = 2
+
+s = knot(p,nel)
+n = range(len(s)-p-1)
+# print(A)
+
+# Graville Abscissae
+xG = np.zeros([len(n),1])
+for A in n:
+    for i in range(A+1,A+p):
+        xG[A] += (1.0/p)*s[i]
+# print('xG = ',xG)
+
+xs = np.zeros([len(xG),1])
+for knot in s:
+    for A in n:
+        xs[knot] += xG[A]*
+
+
 # if n = len(s), then there are n-p-1 shape functions
 # Convert to B-spline:
 # for each element:
-    # assemble vector of
-nel = 10
-p = 1
+#     assemble vector of
 
+# The following section of code verifies the B-spline shape functions
 plt.figure()
 for e in range(1,nel+1):
     ksi=np.linspace(-1,1,10,endpoint=True)

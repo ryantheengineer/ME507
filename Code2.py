@@ -121,6 +121,7 @@ def LM(a,e,n):
 # Create knot vector
 def knot(p,nel):
     he = 1./nel
+    print('he = ',he)
     # he = 1.0
     s = np.zeros([p+nel+1+p,1]) # knot vector should have length of 2*p + # of nodes
     temp = 0
@@ -131,8 +132,6 @@ def knot(p,nel):
             temp += he
         s[i] = temp
 
-    print('p = ', p)
-    print('\n')
     print('s = ', s)
     return s
 
@@ -141,7 +140,7 @@ def knot(p,nel):
 #     for A = range(len(s)):
 
 
-# Define Bsplines for a given element NOTE: may have problems as defined. Need to be able to have a vector of Bezier curves along the whole set of elements
+# Define Bsplines for a given element NOTE: MAY NEED TO CHANGE SO YOU FEED IN A SINGLE VALUE AND GET THE SINGLE N INTERPOLATED VALUE OUT FOR EACH N
 def Bspline(e,p,nel,ksi):   # give it a ksi vector like the one below
     # ksi = np.linspace(-1,1,100,endpoint=True):
     Be = np.zeros([p+1,len(ksi)])
@@ -174,8 +173,7 @@ def Bspline(e,p,nel,ksi):   # give it a ksi vector like the one below
         for j in range(p+1):
             Ne[j,i] = Necol[j]
     return Ne
-    # # FIXME: need a column vector out
-    # return Be
+
 
 nel = [1,10,100,1000]
 
@@ -185,6 +183,13 @@ nel = [1,10,100,1000]
 
 # nint should be p + 1. This says how many integration points per element
 nint = 3    # NOTE: check this value and make sure it isn't supposed to change
+
+
+
+
+
+
+
 ################################ PSEUDO-CODE: ##################################
 # Initialize K and F
 # for elements in nel:
