@@ -3,8 +3,11 @@ import matplotlib.pyplot as plt
 # from Code2 import Bap
 # from Code2 import gaussquad
 # from Code2 import fx
+from Code2 import knot
 
-
+nel = 10
+p = 1
+knot(p,nel)
 
 
 

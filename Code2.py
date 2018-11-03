@@ -9,7 +9,7 @@ import math
 # P (What does this mean exactly? Is it referring to the P that comes out of the LM function?)
 
 ## SETUP: ##
-# Bernstein shape functions
+# Bezier curves
 def Bap(a,p,ksi):
     num = math.factorial(p)
     den = math.factorial(a-1)*math.factorial(p+1-a)
@@ -118,10 +118,31 @@ def LM(a,e,n):
     return P
 
 # Compute node locations
+# Create knot vector
+def knot(p,nel):
+    he = 1./nel
+    # he = 1.0
+    s = np.zeros([p+nel+1+p,1]) # knot vector should have length of 2*p + # of nodes
+    temp = 0
+    for i in range(len(s)):
+        if i <= p or i > nel+p:
+            temp += 0
+        else:
+            temp += he
+        s[i] = temp
+
+    print('p = ', p)
+    print('\n')
+    print('s = ', s)
+    return s
+
+
+nel = [1,10,100,1000]
+
+
 
 ## NEED TO DEFINE B-SPLINE INTERPOLATION FUNCTIONS HERE
 
-nel = [1,10,100,1000]
 # nint should be p + 1. This says how many integration points per element
 nint = 3    # NOTE: check this value and make sure it isn't supposed to change
 ################################ PSEUDO-CODE: ##################################
