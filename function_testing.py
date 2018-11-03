@@ -1,17 +1,30 @@
 import numpy as np
 import matplotlib.pyplot as plt
-# from Code2 import Bap
+from Code2 import Bap
 # from Code2 import gaussquad
 # from Code2 import fx
+from Code2 import Bspline
 from Code2 import knot
 
-nel = 10
-p = 1
-knot(p,nel)
+# p = 1
+# s = knot(p,nel)
+# if n = len(s), then there are n-p-1 shape functions
+# Convert to B-spline:
+# for each element:
+    # assemble vector of
+nel = 5
+p = 2
 
-
-
-
+plt.figure()
+for e in range(1,nel+1):
+    ksi=np.linspace(-1,1,10,endpoint=True)
+    N = Bspline(e,p,nel,ksi)
+    ksi+=2*(e-1)
+    # print(ksi)
+    for i in range(p+1):
+        plt.plot(ksi,N[i,:])
+    # plt.plot(ksi,N[0,:],ksi,N[1,:],ksi,N[2,:])
+plt.show()
 
 
 

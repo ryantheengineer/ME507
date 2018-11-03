@@ -40,7 +40,7 @@ def Ce3(e,nel):
         Ce = np.array([[1., 0, 0, 0],
                        [0, 1., 0.5, 0.25],
                        [0, 0, 0.5, 7./12.],
-                       [0, 0, 0, 0.25]])
+                       [0, 0, 0, 1./6.]])
     if e == 2:
         Ce = np.array([[0.25, 0, 0, 0],
                        [7./12., 2./3., 1./3., 1./6.],
@@ -63,40 +63,40 @@ def Ce3(e,nel):
                        [0, 0, 0, 1.]])
     return Ce
 
-def fx(x):  # x must be a vector
-    f = np.zeros([len(x),1])
-    for i in range(len(x)):
-        f[i] = x[i]**2
-    return f
+# def fx(x):  # x must be a vector
+#     f = np.zeros([len(x),1])
+#     for i in range(len(x)):
+#         f[i] = x[i]**2
+#     return f
 
 # Set up quadrature rule: ksi, w
 # NOTE: Gauss quadrature might need to happen on the global x coordinate rather
 # than the parent domain. Come back to this later
-def gaussquad(nint):
-    W = np.zeros([nint,1])
-    ksiint = np.zeros([nint,1])
-    if nint == 1:
-        ksiint[0] = 0
-        W[0] = 0
-    elif nint == 2:
-        ksiint[0] = -1./np.sqrt(3.)
-        ksiint[1] = 1./np.sqrt(3.)
-        W[0] = 1
-        W[1] = 1
-    elif nint == 3:
-        ksiint[0] = -np.sqrt(3./5.)
-        ksiint[1] = 0
-        ksiint[2] = np.sqrt(3./5.)
-        W[0] = 5./9.
-        W[1] = 8./9.
-        W[2] = 5./9.
-
-    integration = 0
-    for i in range(nint):
-        print('integration = ',integration)
-        integration += fx(ksiint[i])*W[i]
-        print('integration = ',integration)
-    return integration  # This gives the integral only in the parent domain ([-1,1]) and not in the global domain
+# def gaussquad(nint):
+#     W = np.zeros([nint,1])
+#     ksiint = np.zeros([nint,1])
+#     if nint == 1:
+#         ksiint[0] = 0
+#         W[0] = 0
+#     elif nint == 2:
+#         ksiint[0] = -1./np.sqrt(3.)
+#         ksiint[1] = 1./np.sqrt(3.)
+#         W[0] = 1
+#         W[1] = 1
+#     elif nint == 3:
+#         ksiint[0] = -np.sqrt(3./5.)
+#         ksiint[1] = 0
+#         ksiint[2] = np.sqrt(3./5.)
+#         W[0] = 5./9.
+#         W[1] = 8./9.
+#         W[2] = 5./9.
+#
+#     integration = 0
+#     for i in range(nint):
+#         print('integration = ',integration)
+#         integration += fx(ksiint[i])*W[i]
+#         print('integration = ',integration)
+#     return integration  # This gives the integral only in the parent domain ([-1,1]) and not in the global domain
 
 
 # Set up LM, ID, IEN arrays
@@ -136,6 +136,44 @@ def knot(p,nel):
     print('s = ', s)
     return s
 
+# def xAG(p,s):
+#
+#     for A = range(len(s)):
+
+
+# Define Bsplines for a given element NOTE: may have problems as defined. Need to be able to have a vector of Bezier curves along the whole set of elements
+def Bspline(e,p,nel,ksi):   # give it a ksi vector like the one below
+    # ksi = np.linspace(-1,1,100,endpoint=True):
+    Be = np.zeros([p+1,len(ksi)])
+    for a in range(1,p+2):
+        for i in range(len(ksi)):
+            Be[a-1,i] = Bap(a,p,ksi[i])
+            # This gives us our len(ksi)x3 or len(ksi)x4 arrays of Bezier curve
+            # interpolation values in the parent domain. Next we need to convert
+            # these into B-splines
+
+    if p == 2:
+        Ce = Ce2(e,nel)
+    if p == 3:
+        Ce = Ce3(e,nel)
+
+    # Ne should be an array the same size as Be
+    Ne = np.zeros([p+1,len(ksi)])
+    # Create vectors of B-spline values, depending on the ksi value on the parent domain
+    Becol = np.zeros([p+1,1])
+    Necol = np.zeros([p+1,1])
+    for i in range(len(ksi)):
+        for j in range(p+1):
+            Becol[j] = Be[j,i]
+        # print(np.shape(Becol))
+        # print(np.shape(Ce*Becol))
+        Necol = np.matmul(Ce,Becol)
+        # print(np.shape(Necol))
+        for j in range(p+1):
+            Ne[j,i] = Necol[j]
+    return Ne
+    # # FIXME: need a column vector out
+    # return Be
 
 nel = [1,10,100,1000]
 
