@@ -16,14 +16,14 @@ n = range(len(s)-p-1)
 # Graville Abscissae
 xG = np.zeros([len(n),1])
 for A in n:
-    for i in range(A+1,A+p):
+    for i in range(A+1,A+p+1):
         xG[A] += (1.0/p)*s[i]
-# print('xG = ',xG)
+print('xG = ',xG) # It looks like this snippet works properly now
 
-xs = np.zeros([len(xG),1])
-for knot in s:
-    for A in n:
-        xs[knot] += xG[A]*
+# xs = np.zeros([len(xG),1])
+# for knot in s:
+#     for A in n:
+#         xs[knot] += xG[A]*
 
 
 # if n = len(s), then there are n-p-1 shape functions
