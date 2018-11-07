@@ -5,6 +5,7 @@ from Code2 import Bap
 # from Code2 import fx
 from Code2 import Bspline
 from Code2 import knot
+from Code2 import xAG
 
 nel = 10
 p = 2
@@ -14,11 +15,15 @@ n = range(len(s)-p-1)
 # print(A)
 
 # Graville Abscissae
-xG = np.zeros([len(n),1])
-for A in n:
-    for i in range(A+1,A+p+1):
-        xG[A] += (1.0/p)*s[i]
-print('xG = ',xG) # It looks like this snippet works properly now
+xG = xAG(p,s)
+print('xG = ', xG)
+
+
+# xG = np.zeros([len(n),1])
+# for A in n:
+#     for i in range(A+1,A+p+1):
+#         xG[A] += (1.0/p)*s[i]
+# print('xG = ',xG) # It looks like this snippet works properly now
 
 # xs = np.zeros([len(xG),1])
 # for knot in s:

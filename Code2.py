@@ -121,7 +121,7 @@ def LM(a,e,n):
 # Create knot vector
 def knot(p,nel):
     he = 1./nel
-    print('he = ',he)
+    # print('he = ',he)
     # he = 1.0
     s = np.zeros([p+nel+1+p,1]) # knot vector should have length of 2*p + # of nodes
     temp = 0
@@ -132,12 +132,16 @@ def knot(p,nel):
             temp += he
         s[i] = temp
 
-    print('s = ', s)
+    # print('s = ', s)
     return s
 
-# def xAG(p,s):
-#
-#     for A = range(len(s)):
+def xAG(p,s):
+    n = range(len(s)-p-1)
+    xG = np.zeros([len(n),1])
+    for A in n:
+        for i in range(A+1,A+p+1):
+            xG[A] += (1.0/p)*s[i]
+    return xG
 
 
 # Define Bsplines for a given element NOTE: MAY NEED TO CHANGE SO YOU FEED IN A SINGLE VALUE AND GET THE SINGLE N INTERPOLATED VALUE OUT FOR EACH N
