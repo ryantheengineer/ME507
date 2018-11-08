@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import math
+import math.factorial as fac
 
 ## INPUT: ##
 # P (What does this mean exactly? Is it referring to the P that comes out of the LM function?)
@@ -11,11 +12,20 @@ import math
 ## SETUP: ##
 # Bezier curves
 def Bap(a,p,ksi):
-    num = math.factorial(p)
-    den = math.factorial(a-1)*math.factorial(p+1-a)
+    num = fac(p)
+    den = fac(a-1)*fac(p+1-a)
     pa_1 = num/den
     B = (1./2.**p)*pa_1*((1-ksi)**(p-(a-1)))*((1+ksi)**(a-1))
     return B
+
+# 1st derivative of Bap with respect to ksi (as given by Wolfram Alpha)
+def Bap1st(a,p,ksi):
+    num1 = (a-1)*fac(p)*((ksi+1)**(a-2))*((1-ksi)**(-a+p+1))
+    den1 = 2*p*fac(a-1)*fac(-a+p+1)
+    num2 = fac(p)*(-a+p+1)*((ksi+1)**(a-1))*((1-ksi)**(p-a))
+    den2 = den1
+    B1 = (num1/den1) - (num2/den2)
+    return B1
 
 # Extraction operators, which we use to convert Bezier curves to B-splines
 # Define Ce for p = 2
@@ -63,40 +73,38 @@ def Ce3(e,nel):
                        [0, 0, 0, 1.]])
     return Ce
 
-# def fx(x):  # x must be a vector
-#     f = np.zeros([len(x),1])
-#     for i in range(len(x)):
-#         f[i] = x[i]**2
-#     return f
+def fx(x):  # x must be a vector
+    f = np.zeros([len(x),1])
+    for i in range(len(x)):
+        f[i] = x[i]**2
+    return f
 
-# Set up quadrature rule: ksi, w
-# NOTE: Gauss quadrature might need to happen on the global x coordinate rather
-# than the parent domain. Come back to this later
-# def gaussquad(nint):
-#     W = np.zeros([nint,1])
-#     ksiint = np.zeros([nint,1])
-#     if nint == 1:
-#         ksiint[0] = 0
-#         W[0] = 0
-#     elif nint == 2:
-#         ksiint[0] = -1./np.sqrt(3.)
-#         ksiint[1] = 1./np.sqrt(3.)
-#         W[0] = 1
-#         W[1] = 1
-#     elif nint == 3:
-#         ksiint[0] = -np.sqrt(3./5.)
-#         ksiint[1] = 0
-#         ksiint[2] = np.sqrt(3./5.)
-#         W[0] = 5./9.
-#         W[1] = 8./9.
-#         W[2] = 5./9.
-#
-#     integration = 0
-#     for i in range(nint):
-#         print('integration = ',integration)
-#         integration += fx(ksiint[i])*W[i]
-#         print('integration = ',integration)
-#     return integration  # This gives the integral only in the parent domain ([-1,1]) and not in the global domain
+# Set up quadrature rule (not integration): ksi, w
+def gaussksi(nint):
+    ksiint = np.zeros([nint,1])
+    if nint == 1:
+        ksiint[0] = 0
+    elif nint == 2:
+        ksiint[0] = -1./np.sqrt(3.)
+        ksiint[1] = 1./np.sqrt(3.)
+    elif nint == 3:
+        ksiint[0] = -np.sqrt(3./5.)
+        ksiint[1] = 0
+        ksiint[2] = np.sqrt(3./5.)
+    return ksiint
+
+def gaussW(nint):
+    W = np.zeros([nint,1])
+    if nint == 1:
+        W[0] = 0
+    elif nint == 2:
+        W[0] = 1
+        W[1] = 1
+    elif nint == 3:
+        W[0] = 5./9.
+        W[1] = 8./9.
+        W[2] = 5./9.
+    return W
 
 
 # Set up LM, ID, IEN arrays
@@ -135,6 +143,7 @@ def knot(p,nel):
     # print('s = ', s)
     return s
 
+# Use knot vector and p value to determine node locations
 def xAG(p,s):
     n = range(len(s)-p-1)
     xG = np.zeros([len(n),1])
@@ -178,15 +187,71 @@ def Bspline(e,p,nel,ksi):   # give it a ksi vector like the one below
             Ne[j,i] = Necol[j]
     return Ne
 
+###########################
+######### INPUT ###########
+###########################
+# nel = [1, 10, 100, 1000]
+nel = [1,10]
+p = [2, 3]
 
-nel = [1,10,100,1000]
+###########################
+######### SETUP ###########
+###########################
+
+# Set up gauss quadrature rule
+nint = 3 # nint = p+1 is normally sufficient. We don't have the nint = 4 gauss rule so we will use nint = 3
+ksiint = gaussksi(nint)
+W = gaussW(nint)
+print('ksiint = ', ksiint)
+print('W = ', W)
+
+
+# NOTE: need to complete setup of Bap, Ce, quadrature rule, setup arrays, and node locations (including knot vectors)
+
+
+for elements in nel:
+    K = np.zeros([elements,elements])
+    F = np.zeros([elements,1])
+    x = np.linspace(0,1,10*elements,endpoint=True)
+    f = fx(x)
+
+    for P in p:
+        if P == 2:
+            Ce = Ce2(e,elements)
+        elif P == 3:
+            Ce = Ce3(e,elements)
+            print('Ce = ',Ce)
+        print('\n')
+        print('p = ',P)
 
 
 
-## NEED TO DEFINE B-SPLINE INTERPOLATION FUNCTIONS HERE
+        for e in range(1,elements+1):
+            Ke = np.zeros([2,2])
+            fe = np.zeros([2,1])
 
-# nint should be p + 1. This says how many integration points per element
-nint = 3    # NOTE: check this value and make sure it isn't supposed to change
+            Be = np.zeros([P+1,1])
+            B1e = np.zeros([P+1,1])
+            xksi = np.zeros([nint,1])
+            for i in range(1,nint+1):
+                Be[i-1] = Bap(i,P,ksiint[i-1])
+                Ne = np.matmul(Ce,Be)
+                print('Ne = ',Ne)
+                B1e[i-1] = Bap1st(i,P,ksiint[i-1])
+                Ne1 = np.matmul(Ce,B1e)
+                print('Ne1 = ',Ne1)
+                for a in range(len(1,P+1)):
+                    xksi[i-1] += *Ne[a-1]
+
+        # for e in range(1,elements+1):
+        #     Ke = np.zeros([2,2])
+        #     fe = np.zeros([2,1])
+        #
+        #     for i in range(1,nint+1):
+        #
+
+
+
 
 
 

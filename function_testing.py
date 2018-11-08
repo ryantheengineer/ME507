@@ -16,25 +16,8 @@ n = range(len(s)-p-1)
 
 # Graville Abscissae
 xG = xAG(p,s)
-print('xG = ', xG)
+print('xG = ', xG)  # This works now
 
-
-# xG = np.zeros([len(n),1])
-# for A in n:
-#     for i in range(A+1,A+p+1):
-#         xG[A] += (1.0/p)*s[i]
-# print('xG = ',xG) # It looks like this snippet works properly now
-
-# xs = np.zeros([len(xG),1])
-# for knot in s:
-#     for A in n:
-#         xs[knot] += xG[A]*
-
-
-# if n = len(s), then there are n-p-1 shape functions
-# Convert to B-spline:
-# for each element:
-#     assemble vector of
 
 # The following section of code verifies the B-spline shape functions
 plt.figure()
@@ -47,8 +30,6 @@ for e in range(1,nel+1):
         plt.plot(ksi,N[i,:])
     # plt.plot(ksi,N[0,:],ksi,N[1,:],ksi,N[2,:])
 plt.show()
-
-
 
 
 
