@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import math
-import math.factorial as fac
+# import math.factorial as fac
 
 ## INPUT: ##
 # P (What does this mean exactly? Is it referring to the P that comes out of the LM function?)
@@ -12,17 +12,17 @@ import math.factorial as fac
 ## SETUP: ##
 # Bezier curves
 def Bap(a,p,ksi):
-    num = fac(p)
-    den = fac(a-1)*fac(p+1-a)
+    num = math.factorial(p)
+    den = math.factorial(a-1)*math.factorial(p+1-a)
     pa_1 = num/den
     B = (1./2.**p)*pa_1*((1-ksi)**(p-(a-1)))*((1+ksi)**(a-1))
     return B
 
 # 1st derivative of Bap with respect to ksi (as given by Wolfram Alpha)
 def Bap1st(a,p,ksi):
-    num1 = (a-1)*fac(p)*((ksi+1)**(a-2))*((1-ksi)**(-a+p+1))
-    den1 = 2*p*fac(a-1)*fac(-a+p+1)
-    num2 = fac(p)*(-a+p+1)*((ksi+1)**(a-1))*((1-ksi)**(p-a))
+    num1 = (a-1)*math.factorial(p)*((ksi+1)**(a-2))*((1-ksi)**(-a+p+1))
+    den1 = 2*p*math.factorial(a-1)*math.factorial(-a+p+1)
+    num2 = math.factorial(p)*(-a+p+1)*((ksi+1)**(a-1))*((1-ksi)**(p-a))
     den2 = den1
     B1 = (num1/den1) - (num2/den2)
     return B1
@@ -129,8 +129,6 @@ def LM(a,e,n):
 # Create knot vector
 def knot(p,nel):
     he = 1./nel
-    # print('he = ',he)
-    # he = 1.0
     s = np.zeros([p+nel+1+p,1]) # knot vector should have length of 2*p + # of nodes
     temp = 0
     for i in range(len(s)):
@@ -139,13 +137,11 @@ def knot(p,nel):
         else:
             temp += he
         s[i] = temp
-
-    # print('s = ', s)
     return s
 
 # Use knot vector and p value to determine node locations
 def xAG(p,s):
-    n = range(len(s)-p-1)
+    n = range(len(s)-p-1)   # This adds several elements to xG that probably shouldn't be there
     xG = np.zeros([len(n),1])
     for A in n:
         for i in range(A+1,A+p+1):
@@ -191,8 +187,9 @@ def Bspline(e,p,nel,ksi):   # give it a ksi vector like the one below
 ######### INPUT ###########
 ###########################
 # nel = [1, 10, 100, 1000]
-nel = [1,10]
+nel = [10]
 p = [2, 3]
+a = np.array([[1],[2]])
 
 ###########################
 ######### SETUP ###########
@@ -205,28 +202,41 @@ W = gaussW(nint)
 print('ksiint = ', ksiint)
 print('W = ', W)
 
-
 # NOTE: need to complete setup of Bap, Ce, quadrature rule, setup arrays, and node locations (including knot vectors)
 
+# Set up LM array
+# for elements in ne
+# LMarray = LM()
 
+# %%
 for elements in nel:
     K = np.zeros([elements,elements])
     F = np.zeros([elements,1])
     x = np.linspace(0,1,10*elements,endpoint=True)
     f = fx(x)
 
+    # %%
     for P in p:
-        if P == 2:
-            Ce = Ce2(e,elements)
-        elif P == 3:
-            Ce = Ce3(e,elements)
-            print('Ce = ',Ce)
-        print('\n')
+        print('\n\n')
         print('p = ',P)
+        nen = P + 1     # number of element nodes
+        knotvector = knot(P,elements)
+        print('knotvector = ',knotvector) # NOTE: the knot vector creation doesn't appear to be working properly
+        # xG = []
+        xG = xAG(P,knotvector)  # nodes
+        print('xG = ',xG)
 
-
-
+        # %%
         for e in range(1,elements+1):
+            print('\n')
+            print('e = ',e)
+            if P == 2:
+                Ce = Ce2(e,elements)
+            elif P == 3:
+                Ce = Ce3(e,elements)
+            print('Ce = ',Ce)
+            if elements == 1:
+                Ce = np.array([[1, 0],[0, 1]])
             Ke = np.zeros([2,2])
             fe = np.zeros([2,1])
 
@@ -238,10 +248,10 @@ for elements in nel:
                 Ne = np.matmul(Ce,Be)
                 print('Ne = ',Ne)
                 B1e[i-1] = Bap1st(i,P,ksiint[i-1])
-                Ne1 = np.matmul(Ce,B1e)
+                Ne1 = np.matmul(Ce,B1e) # 1st derivative of Ne
                 print('Ne1 = ',Ne1)
-                for a in range(len(1,P+1)):
-                    xksi[i-1] += *Ne[a-1]
+                # for a in range(len(1,P+1)):
+                #     xksi[i-1] += *Ne[a-1]
 
         # for e in range(1,elements+1):
         #     Ke = np.zeros([2,2])
