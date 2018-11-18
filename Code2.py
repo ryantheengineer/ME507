@@ -15,7 +15,7 @@ def Bap(a,p,ksi):
     num = math.factorial(p)
     den = math.factorial(a-1)*math.factorial(p+1-a)
     pa_1 = num/den
-    B = (1./2.**p)*pa_1*((1-ksi)**(p-(a-1)))*((1+ksi)**(a-1))
+    B = (1./(2.**p))*pa_1*((1-ksi)**(p-(a-1)))*((1+ksi)**(a-1))
     return B
 
 # 1st derivative of Bap with respect to ksi (as given by Wolfram Alpha)
@@ -193,8 +193,10 @@ if __name__ == "__main__":
     ###########################
     # nel = [1, 10, 100, 1000]  # FIXME: How do you deal with nel = 1?
     # nel = [10, 100, 1000]
-    nel = [10]
-    p = [2, 3]
+    # nel = [10]
+    nel = [3]
+    # p = [2, 3]
+    p = [2]
     a = np.array([[1],[2]])
 
     ###########################
@@ -214,28 +216,25 @@ if __name__ == "__main__":
     # for elements in ne
     # LMarray = LM()
 
-    # %%
     for elements in nel:
         K = np.zeros([elements,elements])
         F = np.zeros([elements,1])
         x = np.linspace(0,1,10*elements,endpoint=True)
         f = fx(x)
 
-        # %%
         for P in p:
             print('\n\n')
             print('p = ',P)
             nen = P + 1     # number of element nodes
             knotvector = knot(P,elements)
-            print('knotvector = ',knotvector)
+            # print('knotvector = ',knotvector)
             # xG = []
             xG = xAG(P,knotvector,elements)  # nodes
-            print('xG = ',xG)
+            # print('xG = ',xG)
 
-            # %%
             for e in range(1,elements+1):
-                # print('\n')
-                # print('e = ',e)
+                print('\n')
+                print('Element: ',e-1)
                 if P == 2:
                     Ce = Ce2(e,elements)
                 elif P == 3:
@@ -243,70 +242,30 @@ if __name__ == "__main__":
                 # print('Ce = ',Ce)
                 if elements == 1:
                     Ce = np.array([[1, 0],[0, 1]])
-                Ke = np.zeros([2,2])
-                fe = np.zeros([2,1])
+                ke = np.zeros([2,2])    # this size is incorrect
+                fe = np.zeros([2,1])    # this size is incorrect
 
-                Be = np.zeros([P+1,1])
-                B1e = np.zeros([P+1,1])
-                xksi = np.zeros([nint,1])
+                # iterate on each integration point
                 for i in range(1,nint+1):
-                    Be[i-1] = Bap(i,P,ksiint[i-1])
-                    Ne = np.matmul(Ce,Be)
-                    # print('Ne = ',Ne)
-                    B1e[i-1] = Bap1st(i,P,ksiint[i-1])
-                    Ne1 = np.matmul(Ce,B1e) # 1st derivative of Ne
-                    # print('Ne1 = ',Ne1)
-                    # for a in range(len(1,P+1)):
-                    #     xksi[i-1] += *Ne[a-1]
+                    Be = np.zeros([P+1,1])
+                    B1e = np.zeros([P+1,1])
+                    x = 0.0
+                    print('\n')
+                    print('Integration point (i): ',i-1)
+                    # iterate on the Bernstein polynomials for the element
+                    for a in range(1,P+2):
+                        Be[a-1] = Bap(a,P,ksiint[i-1])
+                        B1e[a-1] = Bap1st(a,P,ksiint[i-1])
+                        Ne = np.matmul(Ce,Be)
+                        Ne1 = np.matmul(Ce,B1e) # 1st derivative of Ne
+                        print('xG = ', xG[a-1])
+                        print('Ne = ', Ne[a-1])
 
-            # for e in range(1,elements+1):
-            #     Ke = np.zeros([2,2])
-            #     fe = np.zeros([2,1])
-            #
-            #     for i in range(1,nint+1):
-            #
-
-
-
-
-
-
-
-
-
-
-    ################################ PSEUDO-CODE: ##################################
-    # Initialize K and F
-    # for elements in nel:
-    #     K = np.zeros([elements,elements])
-    #     F = np.zeros([elements,1])
-    # # Define f(x)
-    #     # fx = x**2
-    # # for e = 1,2,...,nel:
-    #     for e in range(0,elements):
-    #         # initialize ke and fe
-    #         # for i = 1,2,...,nint (where nint is the # of integration points): (THIS IS THE INTEGRATION LOOP)
-    #         for i in range(0,nint):
-    #             # evaluate B[a][p](ksi[i])
-    #             # B[a][p] = Bap(a,p,ksi)  # FIXME: Not sure if this is right
-    #             # compute N = C[e]*B(ksi[i])
-    #             # evaluate derivative of B(ksi[i]) with respect to ksi
-    #             # Take derivative of N with respect to ksi, which is equal to C[e]*derivative of B with respect to ksi
-    #             # compute
-    #
-    #
-    #
-    #
-    #
-    #         # Assemble the element matrices into the global matrices
-    #         for a in range(0,nel):  # NOTE: In the notes there are two different values, nel and nen (are these the same thing?)
-    #             if LM(a,e,elements) > 0:
-    #                 F[LM(a,e,elements)] = F[LM(a,e,elements)] + fe[a]
-    #             for b in range(0,nel):
-    #                 if LM(b,e,elements) > 0:
-    #                     K[LM(a,e,elements),LM(b,e,elements)] += ke[a,b] # NOTE: not sure on the syntax, but the point is to add the ke entry into K at the right position
-    #
-    #
-    #     # end of e loop
-    #
-    #     # Solve Kd = F
+                    # print('B array: ',Be)
+                    # print('dB_dxi array: ',B1e)
+                    # print('\n')
+                    print('N array: ',Ne)
+                    # print('dN_dxi array: ',Ne1)
+                    for a in range(1,P+2):
+                        x += xG[a-1+(e-1)]*Ne[a-1]
+                    print('x = %f') % x
