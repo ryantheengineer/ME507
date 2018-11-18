@@ -127,9 +127,9 @@ def LM(a,e,n):
 
 # Compute node locations
 # Create knot vector
-def knot(p,nel):
+def knot(p,nel):    # FIXME: It looks like this might be creating an incorrect length, resulting in a non-1 end node
     he = 1./nel
-    s = np.zeros([p+nel+1+p,1]) # knot vector should have length of 2*p + # of nodes
+    s = np.zeros([2*p+nel+1,1]) # knot vector should have length of 2*p + # of nodes FIXME: is this actually correct?
     temp = 0
     for i in range(len(s)):
         if i <= p or i > nel+p:
@@ -140,11 +140,13 @@ def knot(p,nel):
     return s
 
 # Use knot vector and p value to determine node locations
-def xAG(p,s):
-    n = range(len(s)-p-1)   # This adds several elements to xG that probably shouldn't be there
+def xAG(p,s,nel):   # FIXME: This still doesn't result in a node at 1
+    n = range(len(s)-p-1)
     xG = np.zeros([len(n),1])
     for A in n:
+        # print('A = ',A)
         for i in range(A+1,A+p+1):
+            # print('s[i] = ',s[i])
             xG[A] += (1.0/p)*s[i]
     return xG
 
@@ -183,82 +185,86 @@ def Bspline(e,p,nel,ksi):   # give it a ksi vector like the one below
             Ne[j,i] = Necol[j]
     return Ne
 
-###########################
-######### INPUT ###########
-###########################
-# nel = [1, 10, 100, 1000]
-nel = [10]
-p = [2, 3]
-a = np.array([[1],[2]])
 
-###########################
-######### SETUP ###########
-###########################
 
-# Set up gauss quadrature rule
-nint = 3 # nint = p+1 is normally sufficient. We don't have the nint = 4 gauss rule so we will use nint = 3
-ksiint = gaussksi(nint)
-W = gaussW(nint)
-print('ksiint = ', ksiint)
-print('W = ', W)
+if __name__ == "__main__":
+    ###########################
+    ######### INPUT ###########
+    ###########################
+    # nel = [1, 10, 100, 1000]  # FIXME: How do you deal with nel = 1?
+    # nel = [10, 100, 1000]
+    nel = [10]
+    p = [2, 3]
+    a = np.array([[1],[2]])
 
-# NOTE: need to complete setup of Bap, Ce, quadrature rule, setup arrays, and node locations (including knot vectors)
+    ###########################
+    ######### SETUP ###########
+    ###########################
 
-# Set up LM array
-# for elements in ne
-# LMarray = LM()
+    # Set up gauss quadrature rule
+    nint = 3 # nint = p+1 is normally sufficient. We don't have the nint = 4 gauss rule so we will use nint = 3
+    ksiint = gaussksi(nint)
+    W = gaussW(nint)
+    # print('ksiint = ', ksiint)
+    # print('W = ', W)
 
-# %%
-for elements in nel:
-    K = np.zeros([elements,elements])
-    F = np.zeros([elements,1])
-    x = np.linspace(0,1,10*elements,endpoint=True)
-    f = fx(x)
+    # NOTE: need to complete setup of Bap, Ce, quadrature rule, setup arrays, and node locations (including knot vectors)
+
+    # Set up LM array
+    # for elements in ne
+    # LMarray = LM()
 
     # %%
-    for P in p:
-        print('\n\n')
-        print('p = ',P)
-        nen = P + 1     # number of element nodes
-        knotvector = knot(P,elements)
-        print('knotvector = ',knotvector) # NOTE: the knot vector creation doesn't appear to be working properly
-        # xG = []
-        xG = xAG(P,knotvector)  # nodes
-        print('xG = ',xG)
+    for elements in nel:
+        K = np.zeros([elements,elements])
+        F = np.zeros([elements,1])
+        x = np.linspace(0,1,10*elements,endpoint=True)
+        f = fx(x)
 
         # %%
-        for e in range(1,elements+1):
-            print('\n')
-            print('e = ',e)
-            if P == 2:
-                Ce = Ce2(e,elements)
-            elif P == 3:
-                Ce = Ce3(e,elements)
-            print('Ce = ',Ce)
-            if elements == 1:
-                Ce = np.array([[1, 0],[0, 1]])
-            Ke = np.zeros([2,2])
-            fe = np.zeros([2,1])
+        for P in p:
+            print('\n\n')
+            print('p = ',P)
+            nen = P + 1     # number of element nodes
+            knotvector = knot(P,elements)
+            print('knotvector = ',knotvector)
+            # xG = []
+            xG = xAG(P,knotvector,elements)  # nodes
+            print('xG = ',xG)
 
-            Be = np.zeros([P+1,1])
-            B1e = np.zeros([P+1,1])
-            xksi = np.zeros([nint,1])
-            for i in range(1,nint+1):
-                Be[i-1] = Bap(i,P,ksiint[i-1])
-                Ne = np.matmul(Ce,Be)
-                print('Ne = ',Ne)
-                B1e[i-1] = Bap1st(i,P,ksiint[i-1])
-                Ne1 = np.matmul(Ce,B1e) # 1st derivative of Ne
-                print('Ne1 = ',Ne1)
-                # for a in range(len(1,P+1)):
-                #     xksi[i-1] += *Ne[a-1]
+            # %%
+            for e in range(1,elements+1):
+                # print('\n')
+                # print('e = ',e)
+                if P == 2:
+                    Ce = Ce2(e,elements)
+                elif P == 3:
+                    Ce = Ce3(e,elements)
+                # print('Ce = ',Ce)
+                if elements == 1:
+                    Ce = np.array([[1, 0],[0, 1]])
+                Ke = np.zeros([2,2])
+                fe = np.zeros([2,1])
 
-        # for e in range(1,elements+1):
-        #     Ke = np.zeros([2,2])
-        #     fe = np.zeros([2,1])
-        #
-        #     for i in range(1,nint+1):
-        #
+                Be = np.zeros([P+1,1])
+                B1e = np.zeros([P+1,1])
+                xksi = np.zeros([nint,1])
+                for i in range(1,nint+1):
+                    Be[i-1] = Bap(i,P,ksiint[i-1])
+                    Ne = np.matmul(Ce,Be)
+                    # print('Ne = ',Ne)
+                    B1e[i-1] = Bap1st(i,P,ksiint[i-1])
+                    Ne1 = np.matmul(Ce,B1e) # 1st derivative of Ne
+                    # print('Ne1 = ',Ne1)
+                    # for a in range(len(1,P+1)):
+                    #     xksi[i-1] += *Ne[a-1]
+
+            # for e in range(1,elements+1):
+            #     Ke = np.zeros([2,2])
+            #     fe = np.zeros([2,1])
+            #
+            #     for i in range(1,nint+1):
+            #
 
 
 
@@ -269,38 +275,38 @@ for elements in nel:
 
 
 
-################################ PSEUDO-CODE: ##################################
-# Initialize K and F
-# for elements in nel:
-#     K = np.zeros([elements,elements])
-#     F = np.zeros([elements,1])
-# # Define f(x)
-#     # fx = x**2
-# # for e = 1,2,...,nel:
-#     for e in range(0,elements):
-#         # initialize ke and fe
-#         # for i = 1,2,...,nint (where nint is the # of integration points): (THIS IS THE INTEGRATION LOOP)
-#         for i in range(0,nint):
-#             # evaluate B[a][p](ksi[i])
-#             # B[a][p] = Bap(a,p,ksi)  # FIXME: Not sure if this is right
-#             # compute N = C[e]*B(ksi[i])
-#             # evaluate derivative of B(ksi[i]) with respect to ksi
-#             # Take derivative of N with respect to ksi, which is equal to C[e]*derivative of B with respect to ksi
-#             # compute
-#
-#
-#
-#
-#
-#         # Assemble the element matrices into the global matrices
-#         for a in range(0,nel):  # NOTE: In the notes there are two different values, nel and nen (are these the same thing?)
-#             if LM(a,e,elements) > 0:
-#                 F[LM(a,e,elements)] = F[LM(a,e,elements)] + fe[a]
-#             for b in range(0,nel):
-#                 if LM(b,e,elements) > 0:
-#                     K[LM(a,e,elements),LM(b,e,elements)] += ke[a,b] # NOTE: not sure on the syntax, but the point is to add the ke entry into K at the right position
-#
-#
-#     # end of e loop
-#
-#     # Solve Kd = F
+    ################################ PSEUDO-CODE: ##################################
+    # Initialize K and F
+    # for elements in nel:
+    #     K = np.zeros([elements,elements])
+    #     F = np.zeros([elements,1])
+    # # Define f(x)
+    #     # fx = x**2
+    # # for e = 1,2,...,nel:
+    #     for e in range(0,elements):
+    #         # initialize ke and fe
+    #         # for i = 1,2,...,nint (where nint is the # of integration points): (THIS IS THE INTEGRATION LOOP)
+    #         for i in range(0,nint):
+    #             # evaluate B[a][p](ksi[i])
+    #             # B[a][p] = Bap(a,p,ksi)  # FIXME: Not sure if this is right
+    #             # compute N = C[e]*B(ksi[i])
+    #             # evaluate derivative of B(ksi[i]) with respect to ksi
+    #             # Take derivative of N with respect to ksi, which is equal to C[e]*derivative of B with respect to ksi
+    #             # compute
+    #
+    #
+    #
+    #
+    #
+    #         # Assemble the element matrices into the global matrices
+    #         for a in range(0,nel):  # NOTE: In the notes there are two different values, nel and nen (are these the same thing?)
+    #             if LM(a,e,elements) > 0:
+    #                 F[LM(a,e,elements)] = F[LM(a,e,elements)] + fe[a]
+    #             for b in range(0,nel):
+    #                 if LM(b,e,elements) > 0:
+    #                     K[LM(a,e,elements),LM(b,e,elements)] += ke[a,b] # NOTE: not sure on the syntax, but the point is to add the ke entry into K at the right position
+    #
+    #
+    #     # end of e loop
+    #
+    #     # Solve Kd = F
