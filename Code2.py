@@ -280,10 +280,9 @@ if __name__ == "__main__":
                     # calculate fe vector
                     
                     for a in range(0,nen):
+                        fe[a] += Ne[a]*fi*(he/2.)*wi
                         for b in range(0,nen):
                             ke[a,b] += Ne1[a]*Ne1[b]*(2./he)*wi
-
-                            fe[a] += Ne[a]*fi*(he/2.)*wi
                     
                     print('fe = ',fe)
                     print('\n')
