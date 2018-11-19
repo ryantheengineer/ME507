@@ -121,7 +121,7 @@ def ID(a,e,n):
         A = 0
     return A
 
-def LM(a,e,n):
+def LM(a,e,n):   # need to redefine so LM and ID don't depend on the number of elements or nodes?
     P = ID(IEN(a,e),a,e,n)
     return P
 
@@ -218,8 +218,7 @@ if __name__ == "__main__":
 
     # Integration loop
     for elements in nel:
-        K = np.zeros([elements,elements])
-        F = np.zeros([elements,1])
+        
         # x = np.linspace(0,1,10*elements,endpoint=True)
         # f = fx(x)
         he = 1./elements
@@ -233,6 +232,11 @@ if __name__ == "__main__":
             # xG = []
             xG = xAG(P,knotvector,elements)  # nodes
             # print('xG = ',xG)
+            activenodes = len(xG)-1
+            print('xG length: ',len(xG))
+            print('# of active nodes: ',activenodes)
+            K = np.zeros([activenodes,activenodes])
+            F = np.zeros([activenodes,1])
 
             for e in range(1,elements+1):
                 print('\n')
@@ -287,3 +291,16 @@ if __name__ == "__main__":
                     print('fe = ',fe)
                     print('\n')
                     print('ke = ',ke)
+        for a in range(1,nen+1):
+					  if LM(a,e) > 0:
+						    F[LM(a,e)] += fe[a-1]
+					  for b in range(1,nen+1):
+						    if LM(b,e) > 0:
+						    	  K[LM(a,e),LM(b,e)] += ke[a-1,b-1]
+
+        d = np.linalg.solve(K,F)
+        print('d = ',d)
+
+
+
+
