@@ -216,11 +216,13 @@ if __name__ == "__main__":
     # for elements in ne
     # LMarray = LM()
 
+    # Integration loop
     for elements in nel:
         K = np.zeros([elements,elements])
         F = np.zeros([elements,1])
-        x = np.linspace(0,1,10*elements,endpoint=True)
-        f = fx(x)
+        # x = np.linspace(0,1,10*elements,endpoint=True)
+        # f = fx(x)
+        he = 1./elements
 
         for P in p:
             print('\n\n')
@@ -247,6 +249,7 @@ if __name__ == "__main__":
 
                 # iterate on each integration point
                 for i in range(1,nint+1):
+                    wi = W[i-1]
                     Be = np.zeros([P+1,1])
                     B1e = np.zeros([P+1,1])
                     x = 0.0
@@ -258,16 +261,29 @@ if __name__ == "__main__":
                         B1e[a-1] = Bap1st(a,P,ksiint[i-1])
                         Ne = np.matmul(Ce,Be)
                         Ne1 = np.matmul(Ce,B1e) # 1st derivative of Ne
-                        print('xG = ', xG[a-1])
-                        print('Ne = ', Ne[a-1])
+                        # print('xG = ', xG[a-1])
+                        # print('Ne = ', Ne[a-1])
 
                     # print('B array: ',Be)
                     # print('dB_dxi array: ',B1e)
                     # print('\n')
-                    print('N array: ',Ne)
+                    # print('N array: ',Ne)
                     # print('dN_dxi array: ',Ne1)
                     for a in range(1,P+2):
                         x += xG[a-1+(e-1)]*Ne[a-1]
-                    print('x = %f') % x
-                    fx = x**2
-                    print('f(x) = ',fx)
+                    # print('x = %f') % x
+                    fi = x**2
+                    # print('f(x) = ',fi)
+
+                    # calculate fe vector
+                    fe = np.zeros([nen,1])  # Check these dimensions later
+                    ke = np.zeros([nen,nen])
+                    for a in range(0,nen):
+                        for b in range(0,nen):
+                            ke[a,b] += Ne1[a]*Ne1[b]*(2./he)*wi
+
+                            fe[a] += Ne[a]*fi*(he/2.)*wi
+                    
+                    print('fe = ',fe)
+                    print('\n')
+                    print('ke = ',ke)
