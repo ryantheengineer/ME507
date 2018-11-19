@@ -269,3 +269,5 @@ if __name__ == "__main__":
                     for a in range(1,P+2):
                         x += xG[a-1+(e-1)]*Ne[a-1]
                     print('x = %f') % x
+                    fx = x**2
+                    print('f(x) = ',fx)
