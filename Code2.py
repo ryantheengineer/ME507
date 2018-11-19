@@ -244,8 +244,10 @@ if __name__ == "__main__":
                 # print('Ce = ',Ce)
                 if elements == 1:
                     Ce = np.array([[1, 0],[0, 1]])
-                ke = np.zeros([2,2])    # this size is incorrect
-                fe = np.zeros([2,1])    # this size is incorrect
+                # ke = np.zeros([2,2])    # this size is incorrect
+                # fe = np.zeros([2,1])    # this size is incorrect
+                fe = np.zeros([nen,1])  # Check these dimensions later
+                ke = np.zeros([nen,nen])
 
                 # iterate on each integration point
                 for i in range(1,nint+1):
@@ -276,8 +278,7 @@ if __name__ == "__main__":
                     # print('f(x) = ',fi)
 
                     # calculate fe vector
-                    fe = np.zeros([nen,1])  # Check these dimensions later
-                    ke = np.zeros([nen,nen])
+                    
                     for a in range(0,nen):
                         for b in range(0,nen):
                             ke[a,b] += Ne1[a]*Ne1[b]*(2./he)*wi
