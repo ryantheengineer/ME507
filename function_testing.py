@@ -6,30 +6,39 @@ from Code2 import Bap
 from Code2 import Bspline
 from Code2 import knot
 from Code2 import xAG
+from Code2 import IEN
+from Code2 import ID
+from Code2 import LM
 
-nel = 10
+nel = 3
 p = 2
 
 s = knot(p,nel)
 n = range(len(s)-p-1)
 # print(A)
 
-# Graville Abscissae
-xG = xAG(p,s)
-print('xG = ', xG)  # This works now
+# Compute
+xG = xAG(p,s,nel)
+print('xG = ', xG)
+xGlength = len(xG)
+nodeindex = np.zeros([p+1,nel])
 
-
-# The following section of code verifies the B-spline shape functions
-plt.figure()
 for e in range(1,nel+1):
-    ksi=np.linspace(-1,1,10,endpoint=True)
-    N = Bspline(e,p,nel,ksi)
-    ksi+=2*(e-1)
-    # print(ksi)
-    for i in range(p+1):
-        plt.plot(ksi,N[i,:])
-    # plt.plot(ksi,N[0,:],ksi,N[1,:],ksi,N[2,:])
-plt.show()
+    for a in range(1,p+2):
+        nodeindex[a-1,e-1] = LM(a,e,xGlength)
+
+print('nodeindex = ',nodeindex)
+# The following section of code verifies the B-spline shape functions
+# plt.figure()
+# for e in range(1,nel+1):
+#     ksi=np.linspace(-1,1,10,endpoint=True)
+#     N = Bspline(e,p,nel,ksi)
+#     ksi+=2*(e-1)
+#     # print(ksi)
+#     for i in range(p+1):
+#         plt.plot(ksi,N[i,:])
+#     # plt.plot(ksi,N[0,:],ksi,N[1,:],ksi,N[2,:])
+# plt.show()
 
 
 

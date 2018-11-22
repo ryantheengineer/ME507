@@ -108,28 +108,36 @@ def gaussW(nint):
 
 
 # Set up LM, ID, IEN arrays
-# a must be a 2x1 vector containing 1,2
+# a must be a column vector containing 1,2,..., # of shape functions
 def IEN(a,e):
     if a == 1:
         A = e
     if a == 2:
         A = e + 1
+    if a == 3:
+        A = e + 2
     return A
 
-def ID(a,e,n):
-    if e == n and a == 2:
-        A = 0
-    return A
+# Take in global node A. If the global node corresponds to an inactive node, in
+# the case of this problem, at L = 1, then the ID array outputs 0 and continues
+# numbering afterward. So maybe have it take in a list of inactive node numbers?
+def ID(node,xGlength):
+    if node == xGlength:
+        eq = 0
+    else:
+        eq = node
+    return eq
 
-def LM(a,e,n):   # need to redefine so LM and ID don't depend on the number of elements or nodes?
-    P = ID(IEN(a,e),a,e,n)
+def LM(a,e,xGlength):
+    A = IEN(a,e)
+    P = ID(A,xGlength)
     return P
 
 # Compute node locations
 # Create knot vector
 def knot(p,nel):    # FIXME: It looks like this might be creating an incorrect length, resulting in a non-1 end node
     he = 1./nel
-    s = np.zeros([2*p+nel+1,1]) # knot vector should have length of 2*p + # of nodes FIXME: is this actually correct?
+    s = np.zeros([2*p+nel+1,1])
     temp = 0
     for i in range(len(s)):
         if i <= p or i > nel+p:
@@ -140,7 +148,7 @@ def knot(p,nel):    # FIXME: It looks like this might be creating an incorrect l
     return s
 
 # Use knot vector and p value to determine node locations
-def xAG(p,s,nel):   # FIXME: This still doesn't result in a node at 1
+def xAG(p,s,nel):
     n = range(len(s)-p-1)
     xG = np.zeros([len(n),1])
     for A in n:
@@ -151,7 +159,7 @@ def xAG(p,s,nel):   # FIXME: This still doesn't result in a node at 1
     return xG
 
 
-# Define Bsplines for a given element NOTE: MAY NEED TO CHANGE SO YOU FEED IN A SINGLE VALUE AND GET THE SINGLE N INTERPOLATED VALUE OUT FOR EACH N
+# Define Bsplines for a given element
 def Bspline(e,p,nel,ksi):   # give it a ksi vector like the one below
     # ksi = np.linspace(-1,1,100,endpoint=True):
     Be = np.zeros([p+1,len(ksi)])
@@ -213,12 +221,12 @@ if __name__ == "__main__":
     # NOTE: need to complete setup of Bap, Ce, quadrature rule, setup arrays, and node locations (including knot vectors)
 
     # Set up LM array
-    # for elements in ne
+    # for elements in nel:
     # LMarray = LM()
 
     # Integration loop
     for elements in nel:
-        
+
         # x = np.linspace(0,1,10*elements,endpoint=True)
         # f = fx(x)
         he = 1./elements
@@ -231,7 +239,8 @@ if __name__ == "__main__":
             # print('knotvector = ',knotvector)
             # xG = []
             xG = xAG(P,knotvector,elements)  # nodes
-            # print('xG = ',xG)
+            print('xG = ',xG)
+            xGlength = len(xG)
             activenodes = len(xG)-1
             print('xG length: ',len(xG))
             print('# of active nodes: ',activenodes)
@@ -259,8 +268,8 @@ if __name__ == "__main__":
                     Be = np.zeros([P+1,1])
                     B1e = np.zeros([P+1,1])
                     x = 0.0
-                    print('\n')
-                    print('Integration point (i): ',i-1)
+                    # print('\n')
+                    # print('Integration point (i): ',i-1)
                     # iterate on the Bernstein polynomials for the element
                     for a in range(1,P+2):
                         Be[a-1] = Bap(a,P,ksiint[i-1])
@@ -282,25 +291,27 @@ if __name__ == "__main__":
                     # print('f(x) = ',fi)
 
                     # calculate fe vector
-                    
+
                     for a in range(0,nen):
                         fe[a] += Ne[a]*fi*(he/2.)*wi
                         for b in range(0,nen):
                             ke[a,b] += Ne1[a]*Ne1[b]*(2./he)*wi
-                    
-                    print('fe = ',fe)
-                    print('\n')
-                    print('ke = ',ke)
-        for a in range(1,nen+1):
-					  if LM(a,e) > 0:
-						    F[LM(a,e)] += fe[a-1]
-					  for b in range(1,nen+1):
-						    if LM(b,e) > 0:
-						    	  K[LM(a,e),LM(b,e)] += ke[a-1,b-1]
+
+                    # print('fe = ',fe)
+                    # print('\n')
+                    # print('ke = ',ke)
+
+                for a in range(1,nen+1):
+                    # print('LM(a,e)= ',LM(a,e,xGlength))
+                    if LM(a,e,xGlength) > 0:
+                        F[LM(a,e,xGlength)-1] += fe[a-1]
+                        # print('F is currently: ',F)
+                        for b in range(1,nen+1):
+                            if LM(b,e,xGlength) > 0:
+                                print('LM(a,e) = ',LM(a,e,xGlength))
+                                print('LM(b,e) = ',LM(b,e,xGlength))
+                                K[LM(a,e,xGlength)-1,LM(b,e,xGlength)-1] += ke[a-1,b-1]
+                                # print('K is currently: ',K)
 
         d = np.linalg.solve(K,F)
         print('d = ',d)
-
-
-
-
