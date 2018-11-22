@@ -239,6 +239,7 @@ if __name__ == "__main__":
             knotvector = knot(P,elements)
             Narray = np.zeros([P+1,elements*nint])
             print('Narray dimensions: ',np.shape(Narray))
+            xarray = np.zeros([1])
             # print('knotvector = ',knotvector)
             # xG = []
             xG = xAG(P,knotvector,elements)  # nodes
@@ -251,8 +252,8 @@ if __name__ == "__main__":
             F = np.zeros([activenodes,1])
             col = 0
             for e in range(1,elements+1):
-                print('\n')
-                print('Element: ',e-1)
+                # print('\n')
+                # print('Element: ',e-1)
                 if P == 2:
                     Ce = Ce2(e,elements)
                 elif P == 3:
@@ -272,8 +273,8 @@ if __name__ == "__main__":
                     Be = np.zeros([P+1,1])
                     B1e = np.zeros([P+1,1])
                     x = 0.0
-                    print('\n')
-                    print('Integration point (i): ',i-1)
+                    # print('\n')
+                    # print('Integration point (i): ',i-1)
                     # iterate on the Bernstein polynomials for the element
                     for a in range(1,P+2):
                         Be[a-1] = Bap(a,P,ksiint[i-1])
@@ -281,7 +282,7 @@ if __name__ == "__main__":
                         Ne = np.matmul(Ce,Be)
                         Ne1 = np.matmul(Ce,B1e) # 1st derivative of Ne
                         # print('xG = ', xG[a-1])
-                    print('Ne = ', Ne)
+                    # print('Ne = ', Ne)
                     # insert Ne into Narray
                     for row in range(P+1):
                         Narray[row,col] = Ne[row]
@@ -295,6 +296,7 @@ if __name__ == "__main__":
                     for a in range(1,P+2):
                         x += xG[a-1+(e-1)]*Ne[a-1]
                     # print('x = %f') % x
+                    xarray = np.append(xarray,x)
                     fi = x**2
                     # print('f(x) = ',fi)
 
@@ -320,57 +322,66 @@ if __name__ == "__main__":
                                 # print('LM(b,e) = ',LM(b,e,xGlength))
                                 K[LM(a,e,xGlength)-1,LM(b,e,xGlength)-1] += ke[a-1,b-1]
                                 # print('K is currently: ',K)
-        print('Narray = ',Narray)
+            # print('Narray = ',Narray)
+            # print('xarray = ',xarray)
+            xarray = np.delete(xarray,0)
+            # print('xarray = ',xarray)
+            d = np.linalg.solve(K,F)
+            # print('d = ',d)
+            # append 0 on the end for calculating uh
+            d = np.append(d,0.)
+            # print('d = ',d)
 
-        d = np.linalg.solve(K,F)
-        # print('d = ',d)
-        # append 0 on the end for calculating uh
-        d = np.append(d,0.)
-        print('d = ',d)
+            uh = np.zeros([len(xarray),1])
+            for row in range(len(uh)):
+                for A in range(P+1):
+                    uh[row] += d[A]*Narray[A,row]
+            print('uh = ',uh)
 
 
-        # N = 10
-        # ksi = np.linspace(-1,1,N,endpoint=False)
-        #
-        # for n in range(1,xGlength+1):
-        #     x1 = xg[n-1]
-        #     x2 = xg[n]
-        #     xstep = (x2-x1)/N
-        #     xtemp = np.zeros([N,1])
-        #     for k in range(len(ksi)):
-        #         xtemp[k] = x1 + k*xstep
-        #     x = np.append(x,xtemp,axis=0)
-        #     uhtemp = np.zeros([N,1])
-        #
-        #     # set d1 and d2 for the given element
-        #     A = range(1,)
-        #     d1 = d[e-1]
-        #     if d1 == d[-1]:
-        #         d2 = 0
-        #     else:
-        #         d2 = d[e]
-        #     for k in range(len(ksi)):
-        #         uhtemp[k] = 0.5*d1*(1-ksi[k]) + 0.5*d2*(1+ksi[k])
-        #
-        #     uh = np.append(uh,uhtemp,axis=0)
-        #
-        # uh = np.delete(uh,0,0)
-        # x = np.delete(x,0,0)
+            # N = 10
+            # ksi = np.linspace(-1,1,N,endpoint=False)
+            #
+            # for n in range(1,xGlength+1):
+            #     x1 = xg[n-1]
+            #     x2 = xg[n]
+            #     xstep = (x2-x1)/N
+            #     xtemp = np.zeros([N,1])
+            #     for k in range(len(ksi)):
+            #         xtemp[k] = x1 + k*xstep
+            #     x = np.append(x,xtemp,axis=0)
+            #     uhtemp = np.zeros([N,1])
+            #
+            #     # set d1 and d2 for the given element
+            #     A = range(1,)
+            #     d1 = d[e-1]
+            #     if d1 == d[-1]:
+            #         d2 = 0
+            #     else:
+            #         d2 = d[e]
+            #     for k in range(len(ksi)):
+            #         uhtemp[k] = 0.5*d1*(1-ksi[k]) + 0.5*d2*(1+ksi[k])
+            #
+            #     uh = np.append(uh,uhtemp,axis=0)
+            #
+            # uh = np.delete(uh,0,0)
+            # x = np.delete(x,0,0)
 
-        u = np.zeros([len(xG),1])
-        for j in range(len(xG)):
-            u[j] = (1/12.)*(1 - xG[j]**4) # should this really be based on the length of xG? It gets choppy for low vector lengths
-        plt.plot(xG,u)
-        plt.show()
+            u = np.zeros([len(xarray),1])
+            for j in range(len(xarray)):
+                u[j] = (1/12.)*(1 - xarray[j]**4) # should this really be based on the length of xG? It gets choppy for low vector lengths
+            plt.plot(xarray,u)
+            plt.plot(xarray,uh)
+            plt.show()
 
-        # # Plot u(x) and uh(x) for the given combination of elements and load
-        # title = ('FEA solution for load case ' + fcase[i] + ' with '
-        #     + str(elements) + ' elements')
-        # plt.figure()
-        # plt.title(title)
-        # plt.xlabel('Linear position along beam (x)')
-        # plt.ylabel('Displacement (u)')
-        # plt.plot(x,u,label='u(x)',linewidth=1,color='r')
-        # plt.plot(x,uh,label='uh(x)',linewidth=1,color='b',linestyle='--')
-        # plt.legend()
-        # plt.show()
+            # # Plot u(x) and uh(x) for the given combination of elements and load
+            # title = ('FEA solution for load case ' + fcase[i] + ' with '
+            #     + str(elements) + ' elements')
+            # plt.figure()
+            # plt.title(title)
+            # plt.xlabel('Linear position along beam (x)')
+            # plt.ylabel('Displacement (u)')
+            # plt.plot(x,u,label='u(x)',linewidth=1,color='r')
+            # plt.plot(x,uh,label='uh(x)',linewidth=1,color='b',linestyle='--')
+            # plt.legend()
+            # plt.show()
