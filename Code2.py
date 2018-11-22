@@ -110,6 +110,7 @@ def gaussW(nint):
 # Set up LM, ID, IEN arrays
 # a must be a column vector containing 1,2,..., # of shape functions
 def IEN(a,e):
+    A = 0
     if a == 1:
         A = e
     if a == 2:
@@ -122,6 +123,7 @@ def IEN(a,e):
 # the case of this problem, at L = 1, then the ID array outputs 0 and continues
 # numbering afterward. So maybe have it take in a list of inactive node numbers?
 def ID(node,xGlength):
+    eq = 0
     if node == xGlength:
         eq = 0
     else:
@@ -199,13 +201,13 @@ if __name__ == "__main__":
     ###########################
     ######### INPUT ###########
     ###########################
-    # nel = [1, 10, 100, 1000]  # FIXME: How do you deal with nel = 1?
+    nel = [1, 10, 100, 1000]  # FIXME: How do you deal with nel = 1?
     # nel = [10, 100, 1000]
     # nel = [10]
-    nel = [3]
-    # p = [2, 3]
-    p = [2]
-    a = np.array([[1],[2]])
+    # nel = [1]
+    p = [2, 3]
+    # p = [2]
+    # a = np.array([[1],[2]])
 
     ###########################
     ######### SETUP ###########
@@ -239,7 +241,7 @@ if __name__ == "__main__":
             # print('knotvector = ',knotvector)
             # xG = []
             xG = xAG(P,knotvector,elements)  # nodes
-            print('xG = ',xG)
+            # print('xG = ',xG)
             xGlength = len(xG)
             activenodes = len(xG)-1
             print('xG length: ',len(xG))
@@ -248,15 +250,17 @@ if __name__ == "__main__":
             F = np.zeros([activenodes,1])
 
             for e in range(1,elements+1):
-                print('\n')
-                print('Element: ',e-1)
+                # print('\n')
+                # print('Element: ',e-1)
                 if P == 2:
                     Ce = Ce2(e,elements)
                 elif P == 3:
                     Ce = Ce3(e,elements)
                 # print('Ce = ',Ce)
-                if elements == 1:
-                    Ce = np.array([[1, 0],[0, 1]])
+                if elements == 1 and P == 2:
+                    Ce = np.array([[1, 0, 0],[0, 1, 0],[0, 0, 1]])
+                if elements == 1 and P == 3:
+                    Ce = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])
                 # ke = np.zeros([2,2])    # this size is incorrect
                 # fe = np.zeros([2,1])    # this size is incorrect
                 fe = np.zeros([nen,1])  # Check these dimensions later
@@ -308,8 +312,8 @@ if __name__ == "__main__":
                         # print('F is currently: ',F)
                         for b in range(1,nen+1):
                             if LM(b,e,xGlength) > 0:
-                                print('LM(a,e) = ',LM(a,e,xGlength))
-                                print('LM(b,e) = ',LM(b,e,xGlength))
+                                # print('LM(a,e) = ',LM(a,e,xGlength))
+                                # print('LM(b,e) = ',LM(b,e,xGlength))
                                 K[LM(a,e,xGlength)-1,LM(b,e,xGlength)-1] += ke[a-1,b-1]
                                 # print('K is currently: ',K)
 
