@@ -201,11 +201,11 @@ if __name__ == "__main__":
     ###########################
     ######### INPUT ###########
     ###########################
-    # nel = [1, 10, 100, 1000]  # FIXME: How do you deal with nel = 1?
+    # nel = [1, 10, 100, 1000]
     # nel = [1, 10]
-    nel = [4]
-    # p = [2, 3]
-    p = [2]
+    nel = [3]
+    p = [2, 3]
+    # p = [2]
     # a = np.array([[1],[2]])
 
     ###########################
@@ -338,28 +338,22 @@ if __name__ == "__main__":
             print('\n')
             uh = np.zeros([len(xarray),1])
 
-            if P == 2:
-                print('len(uh) = ',len(uh))
-                for x in range(len(uh)):
-                    if x < P+1: # should this be P instead of 2? does that scale?
-                        # print('index = ',x)
-                        for A in range(P+1):
-                            # print('N[A,x] = ',Narray[A,x])
-                            uh[x] += d[A]*Narray[A,x]
-                    elif len(uh)-x < P+2:
-                        for A in range(1,P+2):
-                            uh[x] += d[-A]*Narray[-A,x]
-                    else:
-                        loc = x/(P+1)
-                        for A in range(P+1):
-                            uh[x] += d[loc+A]*Narray[A,x]
-                        # # Check where the integration point is
-                        # for node in range(P-1,len(xG)-P+1):
-                        #     if xarray[x] > xG[node] and xarray[x] < xG[node+1]:
-                        #
-                        #
-                        # uh[x] = d[]*Narray[0,x] + d[]
-
+            # if P == 2:
+            # print('len(uh) = ',len(uh))
+            for x in range(len(uh)):
+                if x < P+1: # should this be P instead of 2? does that scale?
+                    # print('index = ',x)
+                    for A in range(P+1):
+                        # print('N[A,x] = ',Narray[A,x])
+                        uh[x] += d[A]*Narray[A,x]
+                elif len(uh)-x < P+2:
+                    for A in range(1,P+2):
+                        uh[x] += d[-A]*Narray[-A,x]
+                else:
+                    loc = x/(P+1)
+                    for A in range(P+1):
+                        uh[x] += d[loc+A]*Narray[A,x]
+                        
 
             # N = 10
             # ksi = np.linspace(-1,1,N,endpoint=False)
