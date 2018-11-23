@@ -10,8 +10,8 @@ from Code2 import IEN
 from Code2 import ID
 from Code2 import LM
 
-nel = 3
-p = 2
+nel = 4
+p = 3
 
 s = knot(p,nel)
 n = range(len(s)-p-1)
@@ -23,22 +23,22 @@ print('xG = ', xG)
 xGlength = len(xG)
 nodeindex = np.zeros([p+1,nel])
 
-for e in range(1,nel+1):
-    for a in range(1,p+2):
-        nodeindex[a-1,e-1] = LM(a,e,xGlength)
-
-print('nodeindex = ',nodeindex)
-# The following section of code verifies the B-spline shape functions
-# plt.figure()
 # for e in range(1,nel+1):
-#     ksi=np.linspace(-1,1,10,endpoint=True)
-#     N = Bspline(e,p,nel,ksi)
-#     ksi+=2*(e-1)
-#     # print(ksi)
-#     for i in range(p+1):
-#         plt.plot(ksi,N[i,:])
-#     # plt.plot(ksi,N[0,:],ksi,N[1,:],ksi,N[2,:])
-# plt.show()
+#     for a in range(1,p+2):
+#         nodeindex[a-1,e-1] = LM(a,e,xGlength)
+#
+# print('nodeindex = ',nodeindex)
+# The following section of code verifies the B-spline shape functions
+plt.figure()
+for e in range(1,nel+1):
+    ksi=np.linspace(-1,1,10,endpoint=True)
+    N = Bspline(e,p,nel,ksi)
+    ksi+=2*(e-1)
+    # print(ksi)
+    for i in range(p+1):
+        plt.plot(ksi,N[i,:])
+    # plt.plot(ksi,N[0,:],ksi,N[1,:],ksi,N[2,:])
+plt.show()
 
 
 
