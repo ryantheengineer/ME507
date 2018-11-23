@@ -204,8 +204,8 @@ if __name__ == "__main__":
     # nel = [1, 10, 100, 1000]
     # nel = [1, 10]
     nel = [3]
-    p = [2, 3]
-    # p = [2]
+    # p = [2, 3]
+    p = [3]
     # a = np.array([[1],[2]])
 
     ###########################
@@ -231,10 +231,10 @@ if __name__ == "__main__":
         # x = np.linspace(0,1,10*elements,endpoint=True)
         # f = fx(x)
         he = 1./elements
-        xe = np.zeros([elements+1,1])
-        for node in range(len(xe)):
-            xe[node] = node*he
-        # print('xe = ',xe)
+        # xe = np.zeros([elements+1,1])
+        # for node in range(len(xe)):
+        #     xe[node] = node*he
+        # # print('xe = ',xe)
 
         for P in p:
             print('\n\n')
@@ -319,17 +319,28 @@ if __name__ == "__main__":
                     # print('LM(a,e)= ',LM(a,e,xGlength))
                     if LM(a,e,xGlength) > 0:
                         F[LM(a,e,xGlength)-1] += fe[a-1]
-                        # print('F is currently: ',F)
                         for b in range(1,nen+1):
                             if LM(b,e,xGlength) > 0:
                                 # print('LM(a,e) = ',LM(a,e,xGlength))
                                 # print('LM(b,e) = ',LM(b,e,xGlength))
                                 K[LM(a,e,xGlength)-1,LM(b,e,xGlength)-1] += ke[a-1,b-1]
-                                # print('K is currently: ',K)
             # print('Narray = ',Narray)
             # print('xarray = ',xarray)
             xarray = np.delete(xarray,0)
             print('xarray = ',xarray)
+
+            # plt.figure()
+            # plt.plot(xarray,Narray[0,:],'.-',label='N1')
+            # plt.plot(xarray,Narray[1,:],'.-',label='N2')
+            # plt.plot(xarray,Narray[2,:],'.-',label='N3')
+            # if P == 3:
+            #     plt.plot(xarray,Narray[3,:],'.-',label='N4')
+            # plt.legend()
+            # plt.show()
+            # print('F = ',F)
+            # print('K = ',K)
+
+            d = np.zeros([activenodes,1])
             d = np.linalg.solve(K,F)
             # print('d = ',d)
             # append 0 on the end for calculating uh
@@ -338,51 +349,41 @@ if __name__ == "__main__":
             print('\n')
             uh = np.zeros([len(xarray),1])
 
-            # if P == 2:
-            # print('len(uh) = ',len(uh))
-            for x in range(len(uh)):
-                if x < P+1: # should this be P instead of 2? does that scale?
-                    # print('index = ',x)
-                    for A in range(P+1):
-                        # print('N[A,x] = ',Narray[A,x])
-                        uh[x] += d[A]*Narray[A,x]
-                elif len(uh)-x < P+2:
-                    for A in range(1,P+2):
-                        uh[x] += d[-A]*Narray[-A,x]
-                else:
-                    loc = x/(P+1)
+            if P == 2:
+                # print('len(uh) = ',len(uh))
+                for x in range(len(uh)):
+                    # if x < nint:
+                    #     for A in range(P+1):
+                    #         uh[x] += d[A]*Narray[A,x]
+                    # elif len(uh)-x < nint+1:
+                    #     for A in range(1,P+2):
+                    #         uh[x] += d[-A]*Narray[-A,x]
+                    # else:
+                    #     loc = x/(P+1)
+                    #     for A in range(P+1):
+                    #         uh[x] += d[loc+A]*Narray[A,x]
+                    loc = x/nint
                     for A in range(P+1):
                         uh[x] += d[loc+A]*Narray[A,x]
-                        
 
-            # N = 10
-            # ksi = np.linspace(-1,1,N,endpoint=False)
-            #
-            # for n in range(1,xGlength+1):
-            #     x1 = xg[n-1]
-            #     x2 = xg[n]
-            #     xstep = (x2-x1)/N
-            #     xtemp = np.zeros([N,1])
-            #     for k in range(len(ksi)):
-            #         xtemp[k] = x1 + k*xstep
-            #     x = np.append(x,xtemp,axis=0)
-            #     uhtemp = np.zeros([N,1])
-            #
-            #     # set d1 and d2 for the given element
-            #     A = range(1,)
-            #     d1 = d[e-1]
-            #     if d1 == d[-1]:
-            #         d2 = 0
-            #     else:
-            #         d2 = d[e]
-            #     for k in range(len(ksi)):
-            #         uhtemp[k] = 0.5*d1*(1-ksi[k]) + 0.5*d2*(1+ksi[k])
-            #
-            #     uh = np.append(uh,uhtemp,axis=0)
-            #
-            # uh = np.delete(uh,0,0)
-            # x = np.delete(x,0,0)
+            if P == 3:
+                print('len(uh) = ',len(uh))
+                for x in range(len(uh)):
+                    if x < nint:
+                        for A in range(P+1):
+                            print('d[A] = ',d[A])
+                            print('N[A,x] = ',Narray[A,x])
+                            uh[x] += d[A]*Narray[A,x]
+                    elif len(uh)-x < nint+1:
+                        for A in range(1,P+2):
+                            uh[x] += d[-A]*Narray[-A,x]
+                    else:
+                        # uh[x] = 0.0
+                        loc = x/nint
+                        for A in range(P+1):
+                            uh[x] += d[loc+A]*Narray[A,x]
 
+            plt.figure()
             u = np.zeros([len(xarray),1])
             for j in range(len(xarray)):
                 u[j] = (1/12.)*(1 - xarray[j]**4) # should this really be based on the length of xG? It gets choppy for low vector lengths
