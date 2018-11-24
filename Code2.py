@@ -117,6 +117,10 @@ def IEN(a,e):
         A = e + 1
     if a == 3:
         A = e + 2
+    if a == 4:
+        A = e + 3
+    # if a == 5:
+    #     A = e + 4
     return A
 
 # Take in global node A. If the global node corresponds to an inactive node, in
@@ -162,8 +166,7 @@ def xAG(p,s,nel):
 
 
 # Define Bsplines for a given element
-def Bspline(e,p,nel,ksi):   # give it a ksi vector like the one below
-    # ksi = np.linspace(-1,1,100,endpoint=True):
+def Bspline(e,p,nel,ksi):
     Be = np.zeros([p+1,len(ksi)])
     for a in range(1,p+2):
         for i in range(len(ksi)):
@@ -203,9 +206,9 @@ if __name__ == "__main__":
     ###########################
     # nel = [1, 10, 100, 1000]
     # nel = [1, 10]
-    nel = [3]
-    # p = [2, 3]
-    p = [3]
+    nel = [5]
+    p = [2, 3]
+    # p = [3]
     # a = np.array([[1],[2]])
 
     ###########################
@@ -216,8 +219,8 @@ if __name__ == "__main__":
     nint = 3 # nint = p+1 is normally sufficient. We don't have the nint = 4 gauss rule so we will use nint = 3
     ksiint = gaussksi(nint)
     W = gaussW(nint)
-    # print('ksiint = ', ksiint)
-    # print('W = ', W)
+    print('ksiint = ', ksiint)
+    print('W = ', W)
 
     # NOTE: need to complete setup of Bap, Ce, quadrature rule, setup arrays, and node locations (including knot vectors)
 
@@ -263,10 +266,10 @@ if __name__ == "__main__":
                 elif P == 3:
                     Ce = Ce3(e,elements)
                 # print('Ce = ',Ce)
-                if elements == 1 and P == 2:
-                    Ce = np.array([[1, 0, 0],[0, 1, 0],[0, 0, 1]])
-                if elements == 1 and P == 3:
-                    Ce = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])
+                elif elements == 1 and P == 2:
+                    Ce = np.array([[1., 0., 0.],[0., 1., 0.],[0., 0., 1.]])
+                elif elements < 5 and P == 3:
+                    Ce = np.array([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]])
 
                 fe = np.zeros([nen,1])
                 ke = np.zeros([nen,nen])
@@ -316,13 +319,13 @@ if __name__ == "__main__":
                     # print('ke = ',ke)
 
                 for a in range(1,nen+1):
+                    print('a = ',a)
                     # print('LM(a,e)= ',LM(a,e,xGlength))
                     if LM(a,e,xGlength) > 0:
                         F[LM(a,e,xGlength)-1] += fe[a-1]
+                        print('F = ',F)
                         for b in range(1,nen+1):
                             if LM(b,e,xGlength) > 0:
-                                # print('LM(a,e) = ',LM(a,e,xGlength))
-                                # print('LM(b,e) = ',LM(b,e,xGlength))
                                 K[LM(a,e,xGlength)-1,LM(b,e,xGlength)-1] += ke[a-1,b-1]
             # print('Narray = ',Narray)
             # print('xarray = ',xarray)
@@ -337,60 +340,44 @@ if __name__ == "__main__":
             #     plt.plot(xarray,Narray[3,:],'.-',label='N4')
             # plt.legend()
             # plt.show()
-            # print('F = ',F)
-            # print('K = ',K)
+            print('F = ',F)
+            print('K = ',K)
 
             d = np.zeros([activenodes,1])
             d = np.linalg.solve(K,F)
+            # d *= 1.777 # corrects the second one, but makes the first one wrong
             # print('d = ',d)
+
             # append 0 on the end for calculating uh
             d = np.append(d,0.)
             print('d = ',d)
             print('\n')
+
+            # calculate uh(x)
             uh = np.zeros([len(xarray),1])
+            for x in range(len(uh)):
+                loc = x/nint # integer devision returns the element number
+                for A in range(P+1):
+                    # print('d index: ',loc+A)
+                    uh[x] += d[loc+A]*Narray[A,x]
 
-            if P == 2:
-                # print('len(uh) = ',len(uh))
-                for x in range(len(uh)):
-                    # if x < nint:
-                    #     for A in range(P+1):
-                    #         uh[x] += d[A]*Narray[A,x]
-                    # elif len(uh)-x < nint+1:
-                    #     for A in range(1,P+2):
-                    #         uh[x] += d[-A]*Narray[-A,x]
-                    # else:
-                    #     loc = x/(P+1)
-                    #     for A in range(P+1):
-                    #         uh[x] += d[loc+A]*Narray[A,x]
-                    loc = x/nint
-                    for A in range(P+1):
-                        uh[x] += d[loc+A]*Narray[A,x]
-
-            if P == 3:
-                print('len(uh) = ',len(uh))
-                for x in range(len(uh)):
-                    if x < nint:
-                        for A in range(P+1):
-                            print('d[A] = ',d[A])
-                            print('N[A,x] = ',Narray[A,x])
-                            uh[x] += d[A]*Narray[A,x]
-                    elif len(uh)-x < nint+1:
-                        for A in range(1,P+2):
-                            uh[x] += d[-A]*Narray[-A,x]
-                    else:
-                        # uh[x] = 0.0
-                        loc = x/nint
-                        for A in range(P+1):
-                            uh[x] += d[loc+A]*Narray[A,x]
 
             plt.figure()
             u = np.zeros([len(xarray),1])
             for j in range(len(xarray)):
-                u[j] = (1/12.)*(1 - xarray[j]**4) # should this really be based on the length of xG? It gets choppy for low vector lengths
+                u[j] = (1/12.)*(1 - xarray[j]**4)
             plt.plot(xarray,u)
             plt.plot(xarray,uh)
             plt.show()
 
+            # checking my hunch that the uh values are all off by the same factor
+            factor = np.zeros([len(uh),1])
+            for point in range(len(factor)):
+                factor[point] = uh[point]/u[point]
+                # print('\n')
+                # print('u value: ',u[point])
+                # print('uh value: ',uh[point])
+                # print('factor = ',factor[point])
             # # Plot u(x) and uh(x) for the given combination of elements and load
             # title = ('FEA solution for load case ' + fcase[i] + ' with '
             #     + str(elements) + ' elements')
