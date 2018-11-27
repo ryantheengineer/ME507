@@ -198,49 +198,48 @@ def Bspline(e,p,nel,ksi):
             Ne[j,i] = Necol[j]
     return Ne
 
-
+################################ BEGIN MAIN CODE ###############################
 
 if __name__ == "__main__":
-    ###########################
     ######### INPUT ###########
-    ###########################
-    # nel = [1, 10, 100, 1000]
+    nel = [1, 10, 100, 1000]
     # nel = [1, 10]
-    nel = [5]
-    # p = [2, 3]
-    p = [2]
+    # nel = [5]
+    p = [2, 3]
+    # p = [2]
 
-    ###########################
     ######### SETUP ###########
-    ###########################
-
     # Set up gauss quadrature rule
-    nint = 3 # nint = p+1 is normally sufficient. We don't have the nint = 4 gauss rule so we will use nint = 3
+    nint = 3
     ksiint = gaussksi(nint)
     W = gaussW(nint)
-    print('ksiint = ', ksiint)
-    print('W = ', W)
 
-    # Integration loop
-    for elements in nel:
-        he = 1./elements
+    for P in p:
+        # print('\n\n')
+        # print('p = ',P)
+        evector = np.zeros([len(nel),1])
+        hvector = np.zeros([len(nel),1])
+        for i in range(len(hvector)):
+            hvector[i] = 1./nel[i]
+        nodevector = np.zeros([len(nel),1])
+        count = 0
 
-        for P in p:
-            print('\n\n')
-            print('p = ',P)
+        for elements in nel:
+            he = 1./elements
             nen = P + 1     # number of element nodes
             knotvector = knot(P,elements)
             Narray = np.zeros([P+1,elements*nint])
-            print('Narray dimensions: ',np.shape(Narray))
+            # print('Narray dimensions: ',np.shape(Narray))
             xarray = np.zeros([1])
             # print('knotvector = ',knotvector)
             # xG = []
             xG = xAG(P,knotvector,elements)  # nodes
-            print('xG = ',xG)
+            # print('xG = ',xG)
             xGlength = len(xG)
+            nodevector[count] = xGlength
             activenodes = len(xG)-1
-            print('xG length: ',len(xG))
-            print('# of active nodes: ',activenodes)
+            # print('xG length: ',len(xG))
+            # print('# of active nodes: ',activenodes)
             K = np.zeros([activenodes,activenodes])
             F = np.zeros([activenodes,1])
             col = 0
@@ -265,14 +264,12 @@ if __name__ == "__main__":
                 fe = np.zeros([nen,1])
                 ke = np.zeros([nen,nen])
 
-                # iterate on each integration point
+                # INTEGRATION LOOP
                 for i in range(1,nint+1):
                     wi = W[i-1]
                     Be = np.zeros([P+1,1])
                     B1e = np.zeros([P+1,1])
                     x = 0.0
-                    # print('\n')
-                    # print('Integration point (i): ',i-1)
                     # iterate on the Bernstein polynomials for the element
                     for a in range(1,P+2):
                         Be[a-1] = Bap(a,P,ksiint[i-1])
@@ -304,9 +301,9 @@ if __name__ == "__main__":
                         for b in range(0,nen):
                             ke[a,b] += Ne1[a]*Ne1[b]*(2./he)*wi
 
-                    print('fe = ',fe)
-                    print('ke = ',ke)
-                    print('\n')
+                    # print('fe = ',fe)
+                    # print('ke = ',ke)
+                    # print('\n')
 
                 for a in range(1,nen+1):
                     # print('a = ',a)
@@ -317,50 +314,38 @@ if __name__ == "__main__":
                         for b in range(1,nen+1):
                             if LM(b,e,xGlength) > 0:
                                 K[LM(a,e,xGlength)-1,LM(b,e,xGlength)-1] += ke[a-1,b-1]
-            # print('Narray = ',Narray)
-            # print('xarray = ',xarray)
+
             xarray = np.delete(xarray,0)
-            print('xarray = ',xarray)
-            print('F = ',F)
-            print('K = ',K)
+            # print('xarray = ',xarray)
+            # print('F = ',F)
+            # print('K = ',K)
 
             d = np.zeros([activenodes,1])
             d = np.linalg.solve(K,F)
-            # d *= 1.777 # corrects the second one, but makes the first one wrong
-            # print('d = ',d)
 
             # append 0 on the end for calculating uh
             d = np.append(d,0.)
-            print('d = ',d)
-            print('\n')
 
-            # calculate uh(x)
+            # Calculate uh(x)
             uh = np.zeros([len(xarray),1])
             for x in range(len(uh)):
                 loc = x/nint # integer devision returns the element number
                 for A in range(P+1):
-                    # print('d index: ',loc+A)
                     uh[x] += d[loc+A]*Narray[A,x]
-            # print('uh(x) = ',uh)
 
-            # Plot displacements for comparison
+            # Calculate u(x)
             u = np.zeros([len(xarray),1])
             for j in range(len(xarray)):
                 u[j] = (1/12.)*(1 - xarray[j]**4)
-            # print('u(x) = ',u)
-            # plt.figure()
-            # plt.plot(xarray,u)
-            # plt.plot(xarray,uh)
-            # plt.show()
 
-            # checking my hunch that the uh values are all off by the same factor
-            factor = np.zeros([len(uh),1])
-            for point in range(len(factor)):
-                factor[point] = uh[point]/u[point]
-                # print('\n')
-                # print('u value: ',u[point])
-                # print('uh value: ',uh[point])
-                # print('factor = ',factor[point])
+            # # checking my hunch that the uh values are all off by the same factor
+            # factor = np.zeros([len(uh),1])
+            # for point in range(len(factor)):
+            #     factor[point] = uh[point]/u[point]
+            #     # print('\n')
+            #     # print('u value: ',u[point])
+            #     # print('uh value: ',uh[point])
+            #     # print('factor = ',factor[point])
 
 
             # Plot u(x) and uh(x) for the given combination of elements and load
@@ -392,4 +377,24 @@ if __name__ == "__main__":
                 if i == 3:
                     i = 0
             globerr = np.sqrt(globerr)
-            print('global error = ',globerr)
+            evector[count] = globerr
+            count += 1
+
+        convergence = 0
+        convergence = (np.log10(evector[-1]/evector[0]))/(np.log10(hvector[-1]/hvector[0]))
+
+        ## Log-log plots ##
+        plt.figure()
+        plt.title('Rate of convergence for p = ' + str(P))
+        plt.xlabel('Element size (h)')
+        plt.ylabel('Global error (e)')
+        plt.text(hvector[1],evector[2],'Rate of convergence = '+str(convergence),horizontalalignment='center')
+        plt.loglog(hvector,evector,linestyle='--',marker='o')
+        plt.show()
+
+        plt.figure()
+        plt.title('Error vs. Nodes for p = ' + str(P))
+        plt.xlabel('Number of nodes')
+        plt.ylabel('Global error (e)')
+        plt.loglog(nodevector,evector,linestyle='--',marker='o')
+        plt.show()
