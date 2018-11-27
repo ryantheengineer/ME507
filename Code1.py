@@ -166,8 +166,10 @@ for i in range(0,3):
             ue = np.zeros([3,1])
             uhe = np.zeros([3,1])
             for j in range(0,3):
+                # Determine interpolated x values
                 xei[j] = x1*0.5*(1 - ksii[j]) + x2*0.5*(1 + ksii[j])
 
+            # Calculate the u value based on the appropriate x values
             if i == 0:
                 for j in range(0,3):
                     ue[j] = 0.5*c**2 - 0.5*c*xei[j]**2
@@ -178,6 +180,7 @@ for i in range(0,3):
                 for j in range(0,3):
                     ue[j] = (1/12.)*(1 - xei[j]**4)
 
+            # Calculate the uh values based on the appropriate ksi values
             for j in range(0,3):
                 uhe[j] = 0.5*d1*(1-ksii[j]) + 0.5*d2*(1+ksii[j])
 

@@ -20,9 +20,9 @@ def Bap(a,p,ksi):
 
 # 1st derivative of Bap with respect to ksi (as given by Wolfram Alpha)
 def Bap1st(a,p,ksi):
-    num1 = (a-1)*math.factorial(p)*((ksi+1)**(a-2))*((1-ksi)**(-a+p+1))
-    den1 = 2*p*math.factorial(a-1)*math.factorial(-a+p+1)
-    num2 = math.factorial(p)*(-a+p+1)*((ksi+1)**(a-1))*((1-ksi)**(p-a))
+    num1 = (a-1.)*math.factorial(p)*((ksi+1.)**(a-2.))*((1.-ksi)**(-a+p+1.))
+    den1 = 2.*p*math.factorial(a-1)*math.factorial(-a+p+1.)
+    num2 = math.factorial(p)*(-a+p+1.)*((ksi+1.)**(a-1.))*((1.-ksi)**(p-a))
     den2 = den1
     B1 = (num1/den1) - (num2/den2)
     return B1
@@ -207,9 +207,8 @@ if __name__ == "__main__":
     # nel = [1, 10, 100, 1000]
     # nel = [1, 10]
     nel = [5]
-    p = [2, 3]
-    # p = [3]
-    # a = np.array([[1],[2]])
+    # p = [2, 3]
+    p = [2]
 
     ###########################
     ######### SETUP ###########
@@ -222,22 +221,9 @@ if __name__ == "__main__":
     print('ksiint = ', ksiint)
     print('W = ', W)
 
-    # NOTE: need to complete setup of Bap, Ce, quadrature rule, setup arrays, and node locations (including knot vectors)
-
-    # Set up LM array
-    # for elements in nel:
-    # LMarray = LM()
-
     # Integration loop
     for elements in nel:
-
-        # x = np.linspace(0,1,10*elements,endpoint=True)
-        # f = fx(x)
         he = 1./elements
-        # xe = np.zeros([elements+1,1])
-        # for node in range(len(xe)):
-        #     xe[node] = node*he
-        # # print('xe = ',xe)
 
         for P in p:
             print('\n\n')
@@ -267,9 +253,14 @@ if __name__ == "__main__":
                     Ce = Ce3(e,elements)
                 # print('Ce = ',Ce)
                 elif elements == 1 and P == 2:
-                    Ce = np.array([[1., 0., 0.],[0., 1., 0.],[0., 0., 1.]])
+                    Ce = np.array([[1., 0., 0.],
+                                   [0., 1., 0.],
+                                   [0., 0., 1.]])
                 elif elements < 5 and P == 3:
-                    Ce = np.array([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]])
+                    Ce = np.array([[1.,0.,0.,0.],
+                                   [0.,1.,0.,0.],
+                                   [0.,0.,1.,0.],
+                                   [0.,0.,0.,1.]])
 
                 fe = np.zeros([nen,1])
                 ke = np.zeros([nen,nen])
@@ -308,22 +299,21 @@ if __name__ == "__main__":
                     # print('f(x) = ',fi)
 
                     # calculate fe vector
-
                     for a in range(0,nen):
                         fe[a] += Ne[a]*fi*(he/2.)*wi
                         for b in range(0,nen):
                             ke[a,b] += Ne1[a]*Ne1[b]*(2./he)*wi
 
-                    # print('fe = ',fe)
-                    # print('\n')
-                    # print('ke = ',ke)
+                    print('fe = ',fe)
+                    print('ke = ',ke)
+                    print('\n')
 
                 for a in range(1,nen+1):
-                    print('a = ',a)
+                    # print('a = ',a)
                     # print('LM(a,e)= ',LM(a,e,xGlength))
                     if LM(a,e,xGlength) > 0:
                         F[LM(a,e,xGlength)-1] += fe[a-1]
-                        print('F = ',F)
+                        # print('F = ',F)
                         for b in range(1,nen+1):
                             if LM(b,e,xGlength) > 0:
                                 K[LM(a,e,xGlength)-1,LM(b,e,xGlength)-1] += ke[a-1,b-1]
@@ -331,15 +321,6 @@ if __name__ == "__main__":
             # print('xarray = ',xarray)
             xarray = np.delete(xarray,0)
             print('xarray = ',xarray)
-
-            # plt.figure()
-            # plt.plot(xarray,Narray[0,:],'.-',label='N1')
-            # plt.plot(xarray,Narray[1,:],'.-',label='N2')
-            # plt.plot(xarray,Narray[2,:],'.-',label='N3')
-            # if P == 3:
-            #     plt.plot(xarray,Narray[3,:],'.-',label='N4')
-            # plt.legend()
-            # plt.show()
             print('F = ',F)
             print('K = ',K)
 
@@ -360,15 +341,17 @@ if __name__ == "__main__":
                 for A in range(P+1):
                     # print('d index: ',loc+A)
                     uh[x] += d[loc+A]*Narray[A,x]
+            # print('uh(x) = ',uh)
 
-
-            plt.figure()
+            # Plot displacements for comparison
             u = np.zeros([len(xarray),1])
             for j in range(len(xarray)):
                 u[j] = (1/12.)*(1 - xarray[j]**4)
-            plt.plot(xarray,u)
-            plt.plot(xarray,uh)
-            plt.show()
+            # print('u(x) = ',u)
+            # plt.figure()
+            # plt.plot(xarray,u)
+            # plt.plot(xarray,uh)
+            # plt.show()
 
             # checking my hunch that the uh values are all off by the same factor
             factor = np.zeros([len(uh),1])
@@ -378,14 +361,35 @@ if __name__ == "__main__":
                 # print('u value: ',u[point])
                 # print('uh value: ',uh[point])
                 # print('factor = ',factor[point])
-            # # Plot u(x) and uh(x) for the given combination of elements and load
-            # title = ('FEA solution for load case ' + fcase[i] + ' with '
-            #     + str(elements) + ' elements')
-            # plt.figure()
-            # plt.title(title)
-            # plt.xlabel('Linear position along beam (x)')
-            # plt.ylabel('Displacement (u)')
-            # plt.plot(x,u,label='u(x)',linewidth=1,color='r')
-            # plt.plot(x,uh,label='uh(x)',linewidth=1,color='b',linestyle='--')
-            # plt.legend()
-            # plt.show()
+
+
+            # Plot u(x) and uh(x) for the given combination of elements and load
+            title = ('FEA solution for p = ' + str(P) + ' with '
+                + str(elements) + ' elements')
+            plt.figure()
+            plt.title(title)
+            plt.xlabel('Linear position along beam (x)')
+            plt.ylabel('Displacement (u)')
+            plt.plot(xarray,u,label='u(x)',linewidth=1,color='r')
+            plt.plot(xarray,uh,label='uh(x)',linewidth=1,color='b',linestyle='--')
+            plt.legend()
+            plt.show()
+
+            # Calculate the global error
+            i = 0
+            total = 0.0
+            globerr = 0.0
+            diff = np.zeros([len(uh),1])
+            ab2 = np.zeros([len(uh),1])
+            gauss = np.zeros([len(uh),1])
+            for x in range(len(uh)):
+                diff[x] = u[x] - uh[x]
+                ab2[x] = (np.abs(diff[x]))**2
+                wi = W[i]   # want indices 0 through 2, repeating 5 times
+                gauss[x] = ab2[x]*0.5*he*wi
+                globerr += gauss[x]
+                i += 1  # increase the integration point index on the element level
+                if i == 3:
+                    i = 0
+            globerr = np.sqrt(globerr)
+            print('global error = ',globerr)
