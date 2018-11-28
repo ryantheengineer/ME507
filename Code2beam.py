@@ -207,11 +207,14 @@ def Bspline(e,p,nel,ksi):
 
 if __name__ == "__main__":
     ######### INPUT ###########
-    nel = [1, 10, 100]
-    p = [2, 3]
+    # nel = [1, 10, 100]
+    nel = [5]
+    # p = [2, 3]
+    p = [2]
     E = 1000000.0
     b = 0.005
     h = 0.005
+    I = (b*h**3)/12.
     f = 10*h**3
 
     ######### SETUP ###########
@@ -235,15 +238,19 @@ if __name__ == "__main__":
             nen = P + 1     # number of element nodes
             knotvector = knot(P,elements)
             Narray = np.zeros([P+1,elements*nint])
+            N1array = np.zeros([P+1,elements*nint])
+            N2array = np.zeros([P+1,elements*nint])
             # print('Narray dimensions: ',np.shape(Narray))
             xarray = np.zeros([1])
+            x1array = np.zeros([1])
+            x2array = np.zeros([1])
             # print('knotvector = ',knotvector)
             # xG = []
             xG = xAG(P,knotvector,elements)  # nodes
             # print('xG = ',xG)
             xGlength = len(xG)
             nodevector[count] = xGlength
-            activenodes = len(xG)-1
+            activenodes = len(xG)-2
             # print('xG length: ',len(xG))
             # print('# of active nodes: ',activenodes)
             K = np.zeros([activenodes,activenodes])
@@ -277,38 +284,55 @@ if __name__ == "__main__":
                     B1e = np.zeros([P+1,1])
                     B2e = np.zeros([P+1,1])
                     x = 0.0
+                    x1 = 0.0
+                    x2 = 0.0
                     # iterate on the Bernstein polynomials for the element
                     for a in range(1,P+2):
                         Be[a-1] = Bap(a,P,ksiint[i-1])
                         B1e[a-1] = Bap1(a,P,ksiint[i-1])
                         B2e[a-1] = Bap2(a,P,ksiint[i-1])
                         Ne = np.matmul(Ce,Be)
-                        Ne1 = np.matmul(Ce,B1e) # 1st derivative of Ne
-                        Ne2 = np.matmul(Ce,B2e) # 2nd derivative of Ne
+                        N1e = np.matmul(Ce,B1e) # 1st derivative of Ne in parent domain
+                        N2e = np.matmul(Ce,B2e) # 2nd derivative of Ne in parent domain
                         # print('xG = ', xG[a-1])
                     # print('Ne = ', Ne)
                     # insert Ne into Narray
                     for row in range(P+1):
-                        Narray[row,col] = Ne[row]
+                        # column of Narray is the integration point
+                        # row of Narray is the shape function number
+                        Narray[row,col] = Ne[row] # Narray is in the parent domain, and includes all element values put into one array for the whole beam
+                        # print('Narray = ',Narray)
+                    for row in range(P+1):
+                        N1array[row,col] = N1e[row]
+                    for row in range(P+1):
+                        N2array[row,col] = N2e[row]
+
                     col += 1
 
-                    # print('B array: ',Be)
-                    # print('dB_dxi array: ',B1e)
-                    # print('\n')
-                    # print('N array: ',Ne)
-                    # print('dN_dxi array: ',Ne1)
                     for a in range(1,P+2):
                         x += xG[a-1+(e-1)]*Ne[a-1]
-                    # print('x = %f') % x
-                    xarray = np.append(xarray,x)
-                    fi = x**2
+                    xarray = np.append(xarray,x) # x based on ksi; includes all values, not just a single element
+                    # print('xarray = ',xarray)
+
+                    for a in range(1,P+2):
+                        x1 += xG[a-1+(e-1)]*N1e[a-1]
+                    x1array = np.append(x1array,x1)
+
+                    for a in range(1,P+2):
+                        x2 += xG[a-1+(e-1)]*N2e[a-1]
+                    x2array = np.append(x2array,x2)
+
+                    # QUESTION: for loop to create dN/dx? Is dN/dx an array or a specific value?
+
+                    fi = f
                     # print('f(x) = ',fi)
 
                     # calculate fe vector
                     for a in range(0,nen):
                         fe[a] += Ne[a]*fi*(he/2.)*wi
                         for b in range(0,nen):
-                            ke[a,b] += Ne1[a]*Ne1[b]*(2./he)*wi
+                            ke[a,b] += N2e[a]*E*I*N2e[b]*(2./he)*wi # FIXME: at this point, we need not N2e, but d2N/dx2
+                            # ke[a,b] += N1e[a]*N1e[b]*(2./he)*wi
 
                     # print('fe = ',fe)
                     # print('ke = ',ke)
@@ -325,7 +349,12 @@ if __name__ == "__main__":
                                 K[LM(a,e,xGlength)-1,LM(b,e,xGlength)-1] += ke[a-1,b-1]
 
             xarray = np.delete(xarray,0)
-            # print('xarray = ',xarray)
+            x1array = np.delete(x1array,0)
+            x2array = np.delete(x2array,0)
+            print('xarray = ',xarray)
+            # print('x1array = ',x1array)
+            # print('x2array = ',x2array)
+            print('Narray = ',Narray)
             # print('F = ',F)
             # print('K = ',K)
 
@@ -333,7 +362,9 @@ if __name__ == "__main__":
             d = np.linalg.solve(K,F)
 
             # append 0 on the end for calculating uh
-            d = np.append(d,0.)
+            d = np.append(d,[0.,0.])
+            # d = np.append(d,0.)
+            print('d = ',d)
 
             # Calculate uh(x)
             uh = np.zeros([len(xarray),1])
@@ -345,17 +376,8 @@ if __name__ == "__main__":
             # Calculate u(x)
             u = np.zeros([len(xarray),1])
             for j in range(len(xarray)):
-                u[j] = (1/12.)*(1 - xarray[j]**4)
-
-            # # checking my hunch that the uh values are all off by the same factor
-            # factor = np.zeros([len(uh),1])
-            # for point in range(len(factor)):
-            #     factor[point] = uh[point]/u[point]
-            #     # print('\n')
-            #     # print('u value: ',u[point])
-            #     # print('uh value: ',uh[point])
-            #     # print('factor = ',factor[point])
-
+                # u[j] = (1/12.)*(1 - xarray[j]**4)   # FIXME: Need to change equation for beam exact solution
+                u[j] = ((f*xarray[j]**2)/(24.*E*I))*(2.+(2.-xarray[j])**2)
 
             # Plot u(x) and uh(x) for the given combination of elements and load
             title = ('FEA solution for p = ' + str(P) + ' with '
@@ -397,7 +419,7 @@ if __name__ == "__main__":
         plt.title('Rate of convergence for p = ' + str(P))
         plt.xlabel('Element size (h)')
         plt.ylabel('Global error (e)')
-        plt.text(hvector[1],evector[2],'Rate of convergence = '+str(convergence),horizontalalignment='center')
+        # plt.text(hvector[1],evector[2],'Rate of convergence = '+str(convergence),horizontalalignment='center')
         plt.loglog(hvector,evector,linestyle='--',marker='o')
         plt.show()
 
