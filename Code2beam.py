@@ -4,12 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import math
-# import math.factorial as fac
 
-## INPUT: ##
-# P (What does this mean exactly? Is it referring to the P that comes out of the LM function?)
-
-## SETUP: ##
+## FUNCTIONS: ##
 # Bezier curves
 def Bap(a,p,ksi):
     num = math.factorial(p)
@@ -27,9 +23,14 @@ def Bap1(a,p,ksi):
     B1 = (num1/den1) - (num2/den2)
     return B1
 
-# # 2nd derivative of Bap with respect to ksi (as given by Wolfram Alpha)
-# def Bap2(a,p,ksi):
-#     return B2
+# 2nd derivative of Bap with respect to ksi (as given by Wolfram Alpha)
+def Bap2(a,p,ksi):
+    term1 = 1./(math.factorial(a - 1.)*math.factorial(-a + p + 1.))
+    term2 = (a-2.)*(a-1.)*(2.**(-p))*((ksi+1.)**(a-3.))*((1.-ksi)**(-a+p+1.))
+    term3 = (a-1.)*(2.**(1.-p))*(-a+p+1.)*((ksi+1.)**(a-2.))*((1.-ksi)**(p-a))
+    term4 = (2.**(-p))*(p-a)*(-a+p+1.)*((ksi+1.)**(a-1.))*((1.-ksi)**(-a+p-1.))
+    B2 = term1*math.factorial(p)*(term2 - term3 + term4)
+    return B2
 
 # Extraction operators, which we use to convert Bezier curves to B-splines
 # Define Ce for p = 2
@@ -132,7 +133,7 @@ def IEN(a,e):
 # numbering afterward. So maybe have it take in a list of inactive node numbers?
 def ID(node,xGlength):
     eq = 0
-    if node == xGlength:
+    if node == xGlength or node == xGlength-1:  # NOTE: This is a change from the original Code2. Check on this.
         eq = 0
     else:
         eq = node
@@ -145,7 +146,7 @@ def LM(a,e,xGlength):
 
 # Compute node locations
 # Create knot vector
-def knot(p,nel):    # FIXME: It looks like this might be creating an incorrect length, resulting in a non-1 end node
+def knot(p,nel):
     he = 1./nel
     s = np.zeros([2*p+nel+1,1])
     temp = 0
@@ -274,13 +275,16 @@ if __name__ == "__main__":
                     wi = W[i-1]
                     Be = np.zeros([P+1,1])
                     B1e = np.zeros([P+1,1])
+                    B2e = np.zeros([P+1,1])
                     x = 0.0
                     # iterate on the Bernstein polynomials for the element
                     for a in range(1,P+2):
                         Be[a-1] = Bap(a,P,ksiint[i-1])
                         B1e[a-1] = Bap1(a,P,ksiint[i-1])
+                        B2e[a-1] = Bap2(a,P,ksiint[i-1])
                         Ne = np.matmul(Ce,Be)
                         Ne1 = np.matmul(Ce,B1e) # 1st derivative of Ne
+                        Ne2 = np.matmul(Ce,B2e) # 2nd derivative of Ne
                         # print('xG = ', xG[a-1])
                     # print('Ne = ', Ne)
                     # insert Ne into Narray
