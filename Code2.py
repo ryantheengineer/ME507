@@ -274,9 +274,9 @@ if __name__ == "__main__":
                     for a in range(1,P+2):
                         Be[a-1] = Bap(a,P,ksiint[i-1])
                         B1e[a-1] = Bap1st(a,P,ksiint[i-1])
-                        Ne = np.matmul(Ce,Be)
-                        Ne1 = np.matmul(Ce,B1e) # 1st derivative of Ne
-                        # print('xG = ', xG[a-1])
+                    Ne = np.matmul(Ce,Be)
+                    Ne1 = np.matmul(Ce,B1e) # 1st derivative of Ne
+                    # print('xG = ', xG[a-1])
                     # print('Ne = ', Ne)
                     # insert Ne into Narray
                     for row in range(P+1):

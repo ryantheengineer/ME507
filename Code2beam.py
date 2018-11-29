@@ -17,7 +17,7 @@ def Bap(a,p,ksi):
 # 1st derivative of Bap with respect to ksi (as given by Wolfram Alpha)
 def Bap1(a,p,ksi):
     num1 = (a-1.)*math.factorial(p)*((ksi+1.)**(a-2.))*((1.-ksi)**(-a+p+1.))
-    den1 = 2.*p*math.factorial(a-1)*math.factorial(-a+p+1.)
+    den1 = (2.**p)*math.factorial(a-1)*math.factorial(-a+p+1.)
     num2 = math.factorial(p)*(-a+p+1.)*((ksi+1.)**(a-1.))*((1.-ksi)**(p-a))
     den2 = den1
     B1 = (num1/den1) - (num2/den2)
@@ -208,9 +208,9 @@ def Bspline(e,p,nel,ksi):
 if __name__ == "__main__":
     ######### INPUT ###########
     # nel = [1, 10, 100]
-    nel = [5]
+    nel = [1]
     # p = [2, 3]
-    p = [2]
+    p = [3]
     E = 1000000.0
     b = 0.005
     h = 0.005
@@ -240,6 +240,8 @@ if __name__ == "__main__":
             Narray = np.zeros([P+1,elements*nint])
             N1array = np.zeros([P+1,elements*nint])
             N2array = np.zeros([P+1,elements*nint])
+            # dNdx = np.zeros([P+1,elements*nint])
+            # d2Ndx2 = np.zeros([P+1,elements*nint])
             # print('Narray dimensions: ',np.shape(Narray))
             xarray = np.zeros([1])
             x1array = np.zeros([1])
@@ -250,25 +252,25 @@ if __name__ == "__main__":
             # print('xG = ',xG)
             xGlength = len(xG)
             nodevector[count] = xGlength
-            activenodes = len(xG)-2
+            activenodes = len(xG)-1
             # print('xG length: ',len(xG))
-            # print('# of active nodes: ',activenodes)
+            print('# of active nodes: ',activenodes)
             K = np.zeros([activenodes,activenodes])
             F = np.zeros([activenodes,1])
             col = 0
             for e in range(1,elements+1):
-                # print('\n')
-                # print('Element: ',e-1)
+                print('\n')
+                print('Element: ',e-1)
                 if P == 2:
                     Ce = Ce2(e,elements)
                 elif P == 3:
                     Ce = Ce3(e,elements)
                 # print('Ce = ',Ce)
-                elif elements == 1 and P == 2:
+                if elements == 1 and P == 2:
                     Ce = np.array([[1., 0., 0.],
                                    [0., 1., 0.],
                                    [0., 0., 1.]])
-                elif elements < 5 and P == 3:
+                if elements < 5 and P == 3:
                     Ce = np.array([[1.,0.,0.,0.],
                                    [0.,1.,0.,0.],
                                    [0.,0.,1.,0.],
@@ -279,6 +281,8 @@ if __name__ == "__main__":
 
                 # INTEGRATION LOOP
                 for i in range(1,nint+1):
+                    print('\n')
+                    print('\ti = ' + str(i-1))
                     wi = W[i-1]
                     Be = np.zeros([P+1,1])
                     B1e = np.zeros([P+1,1])
@@ -291,11 +295,13 @@ if __name__ == "__main__":
                         Be[a-1] = Bap(a,P,ksiint[i-1])
                         B1e[a-1] = Bap1(a,P,ksiint[i-1])
                         B2e[a-1] = Bap2(a,P,ksiint[i-1])
-                        Ne = np.matmul(Ce,Be)
-                        N1e = np.matmul(Ce,B1e) # 1st derivative of Ne in parent domain
-                        N2e = np.matmul(Ce,B2e) # 2nd derivative of Ne in parent domain
-                        # print('xG = ', xG[a-1])
-                    # print('Ne = ', Ne)
+                    Ne = np.matmul(Ce,Be)
+                    N1e = np.matmul(Ce,B1e) # 1st derivative of Ne in parent domain
+                    N2e = np.matmul(Ce,B2e) # 2nd derivative of Ne in parent domain
+                    # print('xG = ', xG[a-1])
+                    print('Ne = ' + str(Ne))
+                    print('N1e = ' + str(N1e))
+
                     # insert Ne into Narray
                     for row in range(P+1):
                         # column of Narray is the integration point
@@ -307,11 +313,11 @@ if __name__ == "__main__":
                     for row in range(P+1):
                         N2array[row,col] = N2e[row]
 
-                    col += 1
 
                     for a in range(1,P+2):
                         x += xG[a-1+(e-1)]*Ne[a-1]
                     xarray = np.append(xarray,x) # x based on ksi; includes all values, not just a single element
+                    print('x = ' + str(x))
                     # print('xarray = ',xarray)
 
                     for a in range(1,P+2):
@@ -323,19 +329,23 @@ if __name__ == "__main__":
                     x2array = np.append(x2array,x2)
 
                     # QUESTION: for loop to create dN/dx? Is dN/dx an array or a specific value?
+                    dNdx = N1e*(x1)**(-1)
 
-                    fi = f
-                    # print('f(x) = ',fi)
+                    d2Ndx2 = (N2e - N1e*x2)*((x1**2)**(-1))
+
+                    # fi = f
+                    fi = x**2
+                    print('f(x) = ' + str(fi))
 
                     # calculate fe vector
                     for a in range(0,nen):
-                        fe[a] += Ne[a]*fi*(he/2.)*wi
+                        fe[a] += Ne[a]*fi*(he/2.)*wi # QUESTION: is this defined correctly?
                         for b in range(0,nen):
-                            ke[a,b] += N2e[a]*E*I*N2e[b]*(2./he)*wi # FIXME: at this point, we need not N2e, but d2N/dx2
-                            # ke[a,b] += N1e[a]*N1e[b]*(2./he)*wi
+                            ke[a,b] += d2Ndx2[a]*E*I*d2Ndx2[b]*((2./he)**3)*wi # FIXME: This is almost correct, but not quite
 
-                    # print('fe = ',fe)
-                    # print('ke = ',ke)
+                    col += 1
+                    print('fe = ' + str(fe))
+                    print('ke = ' + str(ke))
                     # print('\n')
 
                 for a in range(1,nen+1):
@@ -351,12 +361,12 @@ if __name__ == "__main__":
             xarray = np.delete(xarray,0)
             x1array = np.delete(x1array,0)
             x2array = np.delete(x2array,0)
-            print('xarray = ',xarray)
+            # print('xarray = ',xarray)
             # print('x1array = ',x1array)
             # print('x2array = ',x2array)
-            print('Narray = ',Narray)
-            # print('F = ',F)
-            # print('K = ',K)
+            # print('Narray = ',Narray)
+            print('F = ',F)
+            print('K = ',K)
 
             d = np.zeros([activenodes,1])
             d = np.linalg.solve(K,F)
@@ -376,7 +386,6 @@ if __name__ == "__main__":
             # Calculate u(x)
             u = np.zeros([len(xarray),1])
             for j in range(len(xarray)):
-                # u[j] = (1/12.)*(1 - xarray[j]**4)   # FIXME: Need to change equation for beam exact solution
                 u[j] = ((f*xarray[j]**2)/(24.*E*I))*(2.+(2.-xarray[j])**2)
 
             # Plot u(x) and uh(x) for the given combination of elements and load
