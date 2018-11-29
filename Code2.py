@@ -13,15 +13,15 @@ import math
 # Bezier curves
 def Bap(a,p,ksi):
     num = math.factorial(p)
-    den = math.factorial(a-1)*math.factorial(p+1-a)
+    den = math.factorial(a-1.)*math.factorial(p+1.-a)
     pa_1 = num/den
-    B = (1./(2.**p))*pa_1*((1-ksi)**(p-(a-1)))*((1+ksi)**(a-1))
+    B = (1./(2.**p))*pa_1*((1.-ksi)**(p-(a-1.)))*((1.+ksi)**(a-1.))
     return B
 
 # 1st derivative of Bap with respect to ksi (as given by Wolfram Alpha)
 def Bap1st(a,p,ksi):
     num1 = (a-1.)*math.factorial(p)*((ksi+1.)**(a-2.))*((1.-ksi)**(-a+p+1.))
-    den1 = 2.*p*math.factorial(a-1)*math.factorial(-a+p+1.)
+    den1 = (2.**p)*math.factorial(a-1.)*math.factorial(-a+p+1.)
     num2 = math.factorial(p)*(-a+p+1.)*((ksi+1.)**(a-1.))*((1.-ksi)**(p-a))
     den2 = den1
     B1 = (num1/den1) - (num2/den2)
@@ -248,14 +248,14 @@ if __name__ == "__main__":
                 # print('Element: ',e-1)
                 if P == 2:
                     Ce = Ce2(e,elements)
-                elif P == 3:
+                if P == 3:
                     Ce = Ce3(e,elements)
                 # print('Ce = ',Ce)
-                elif elements == 1 and P == 2:
+                if elements == 1 and P == 2:
                     Ce = np.array([[1., 0., 0.],
                                    [0., 1., 0.],
                                    [0., 0., 1.]])
-                elif elements < 5 and P == 3:
+                if elements < 5 and P == 3:
                     Ce = np.array([[1.,0.,0.,0.],
                                    [0.,1.,0.,0.],
                                    [0.,0.,1.,0.],
