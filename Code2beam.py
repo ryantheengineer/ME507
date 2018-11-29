@@ -339,9 +339,9 @@ if __name__ == "__main__":
 
                     # calculate fe vector
                     for a in range(0,nen):
-                        fe[a] += Ne[a]*fi*(he/2.)*wi # QUESTION: is this defined correctly?
                         for b in range(0,nen):
-                            ke[a,b] += d2Ndx2[a]*E*I*d2Ndx2[b]*((2./he)**3)*wi # FIXME: This is almost correct, but not quite
+                            ke[a,b] += d2Ndx2[a]*E*I*d2Ndx2[b]*((2./he))*wi # FIXME: This is almost correct, but not quite
+                        fe[a] += Ne[a]*fi*(he/2.)*wi # QUESTION: is this defined correctly?
 
                     col += 1
                     print('fe = ' + str(fe))
