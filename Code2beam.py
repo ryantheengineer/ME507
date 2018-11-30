@@ -295,8 +295,8 @@ if __name__ == "__main__":
                         Be[a-1] = Bap(a,P,ksiint[i-1])
                         B1e[a-1] = Bap1(a,P,ksiint[i-1])
                         B2e[a-1] = Bap2(a,P,ksiint[i-1])
-                    Ne = np.matmul(Ce,Be)
-                    N1e = np.matmul(Ce,B1e) # 1st derivative of Ne in parent domain
+                    Ne = np.matmul(Ce,Be) # (CHECKED, CORRECT)
+                    N1e = np.matmul(Ce,B1e) # 1st derivative of Ne in parent domain (CHECKED, CORRECT)
                     N2e = np.matmul(Ce,B2e) # 2nd derivative of Ne in parent domain
                     # print('xG = ', xG[a-1])
                     print('Ne = ' + str(Ne))
@@ -312,10 +312,10 @@ if __name__ == "__main__":
                         N1array[row,col] = N1e[row]
                     for row in range(P+1):
                         N2array[row,col] = N2e[row]
-
+                    col += 1
 
                     for a in range(1,P+2):
-                        x += xG[a-1+(e-1)]*Ne[a-1]
+                        x += xG[a-1+(e-1)]*Ne[a-1] # (CHECKED, CORRECT)
                     xarray = np.append(xarray,x) # x based on ksi; includes all values, not just a single element
                     print('x = ' + str(x))
                     # print('xarray = ',xarray)
@@ -331,19 +331,18 @@ if __name__ == "__main__":
                     # QUESTION: for loop to create dN/dx? Is dN/dx an array or a specific value?
                     dNdx = N1e*(x1)**(-1)
 
-                    d2Ndx2 = (N2e - N1e*x2)*((x1**2)**(-1))
+                    d2Ndx2 = (N2e - dNdx*x2)*(x1**(-2.))
 
                     # fi = f
-                    fi = x**2
+                    fi = x**2 # (CHECKED, CORRECT)
                     print('f(x) = ' + str(fi))
 
                     # calculate fe vector
                     for a in range(0,nen):
-                        for b in range(0,nen):
-                            ke[a,b] += d2Ndx2[a]*E*I*d2Ndx2[b]*((2./he))*wi # FIXME: This is almost correct, but not quite
                         fe[a] += Ne[a]*fi*(he/2.)*wi # QUESTION: is this defined correctly?
-
-                    col += 1
+                        for b in range(0,nen):
+                            ke[a,b] += d2Ndx2[a]*E*I*d2Ndx2[b]*(2./he)*wi # FIXME: This is almost correct, but not quite
+                    
                     print('fe = ' + str(fe))
                     print('ke = ' + str(ke))
                     # print('\n')
