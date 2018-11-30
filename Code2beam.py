@@ -327,11 +327,12 @@ if __name__ == "__main__":
                     for a in range(1,P+2):
                         x2 += xG[a-1+(e-1)]*N2e[a-1]
                     x2array = np.append(x2array,x2)
+                    print('x2 = ' + str(x2))
 
                     # QUESTION: for loop to create dN/dx? Is dN/dx an array or a specific value?
                     dNdx = N1e*(x1)**(-1)
 
-                    d2Ndx2 = (N2e - N1e*x2)*((x1**2)**(-1))
+                    d2Ndx2 = (N2e - N1e*x2)*(x1**-2)
 
                     # fi = f
                     fi = x**2
@@ -339,9 +340,9 @@ if __name__ == "__main__":
 
                     # calculate fe vector
                     for a in range(0,nen):
+                        fe[a] += N1e[a]*fi*(he/2.)*wi # QUESTION: is this defined correctly?
                         for b in range(0,nen):
-                            ke[a,b] += d2Ndx2[a]*E*I*d2Ndx2[b]*((2./he))*wi # FIXME: This is almost correct, but not quite
-                        fe[a] += Ne[a]*fi*(he/2.)*wi # QUESTION: is this defined correctly?
+                            ke[a,b] += d2Ndx2[a]*E*I*d2Ndx2[b]*(2./he)*wi # FIXME: This is almost correct, but not quite
 
                     col += 1
                     print('fe = ' + str(fe))
