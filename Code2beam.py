@@ -437,18 +437,18 @@ if __name__ == "__main__":
         convergence = 0
         convergence = (np.log10(evector[-1]/evector[0]))/(np.log10(hvector[-1]/hvector[0]))
 
-        ## Log-log plots ##
-        plt.figure()
-        plt.title('Rate of convergence for p = ' + str(P))
-        plt.xlabel('Element size (h)')
-        plt.ylabel('Global error (e)')
-        # plt.text(hvector[1],evector[2],'Rate of convergence = '+str(convergence),horizontalalignment='center')
-        plt.loglog(hvector,evector,linestyle='--',marker='o')
-        plt.show()
-
-        plt.figure()
-        plt.title('Error vs. Nodes for p = ' + str(P))
-        plt.xlabel('Number of nodes')
-        plt.ylabel('Global error (e)')
-        plt.loglog(nodevector,evector,linestyle='--',marker='o')
-        plt.show()
+        # ## Log-log plots ##
+        # plt.figure()
+        # plt.title('Rate of convergence for p = ' + str(P))
+        # plt.xlabel('Element size (h)')
+        # plt.ylabel('Global error (e)')
+        # # plt.text(hvector[1],evector[2],'Rate of convergence = '+str(convergence),horizontalalignment='center')
+        # plt.loglog(hvector,evector,linestyle='--',marker='o')
+        # plt.show()
+        #
+        # plt.figure()
+        # plt.title('Error vs. Nodes for p = ' + str(P))
+        # plt.xlabel('Number of nodes')
+        # plt.ylabel('Global error (e)')
+        # plt.loglog(nodevector,evector,linestyle='--',marker='o')
+        # plt.show()
