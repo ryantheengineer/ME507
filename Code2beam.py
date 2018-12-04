@@ -24,12 +24,16 @@ def Bap1(a,p,ksi):
     return B1
 
 # 2nd derivative of Bap with respect to ksi (as given by Wolfram Alpha)
-def Bap2(a,p,ksi):
-    term1 = 1./(math.factorial(a - 1.)*math.factorial(-a + p + 1.))
-    term2 = (a-2.)*(a-1.)*(2.**(-p))*((ksi+1.)**(a-3.))*((1.-ksi)**(-a+p+1.))
-    term3 = (a-1.)*(2.**(1.-p))*(-a+p+1.)*((ksi+1.)**(a-2.))*((1.-ksi)**(p-a))
-    term4 = (2.**(-p))*(p-a)*(-a+p+1.)*((ksi+1.)**(a-1.))*((1.-ksi)**(-a+p-1.))
-    B2 = term1*math.factorial(p)*(term2 - term3 + term4)
+def Bap2(a,p,x):
+    # term1 = 1./(math.factorial(a-1.)*math.factorial(-a+p+1.))
+    # term2 = (a-2.)*(a-1.)*(2.**(-p))*((ksi+1.)**(a-3.))*((1.-ksi)**(-a+p+1.))
+    # term3 = (a-1.)*(2.**(1.-p))*(-a+p+1.)*((ksi+1.)**(a-2.))*((1.-ksi)**(p-a))
+    # term4 = (2.**(-p))*(p-a)*(-a+p+1.)*((ksi+1.)**(a-1.))*((1.-ksi)**(-a+p-1.))
+    # B2 = term1*math.factorial(p)*(term2 - term3 + term4)
+    B2 = (((1. - x)**(-1. - a + p))*((1. + x)**(-3. + a))*(4. + 4.*(a**2.)
+        - 4.*x + (p**2.)*(1. + x)**2. - 4.*a*(2. + p - x + p*x)
+        + p*(3. + 2.*x - x**2.))*math.factorial(p))/((2.**p)*math.factorial(-1. + a)*math.factorial(1. - a + p))
+
     return B2
 
 # Extraction operators, which we use to convert Bezier curves to B-splines
@@ -208,14 +212,15 @@ def Bspline(e,p,nel,ksi):
 if __name__ == "__main__":
     ######### INPUT ###########
     # nel = [1, 10, 100]
-    nel = [1]
+    nel = [3]
     # p = [2, 3]
-    p = [3]
+    p = [2]
     E = 1000000.0
     b = 0.005
     h = 0.005
-    I = (b*h**3)/12.
-    f = 10*h**3
+    I = (b*(h**3.))/12.
+    print('I = ' + str(I))
+    f = 10*(h**3.)
 
     ######### SETUP ###########
     # Set up gauss quadrature rule
@@ -263,7 +268,7 @@ if __name__ == "__main__":
                 print('Element: ',e-1)
                 if P == 2:
                     Ce = Ce2(e,elements)
-                elif P == 3:
+                if P == 3:
                     Ce = Ce3(e,elements)
                 # print('Ce = ',Ce)
                 if elements == 1 and P == 2:
@@ -301,6 +306,7 @@ if __name__ == "__main__":
                     # print('xG = ', xG[a-1])
                     print('Ne = ' + str(Ne))
                     print('N1e = ' + str(N1e))
+                    print('N2e = ' + str(N2e))
 
                     # insert Ne into Narray
                     for row in range(P+1):
@@ -327,22 +333,29 @@ if __name__ == "__main__":
                     for a in range(1,P+2):
                         x2 += xG[a-1+(e-1)]*N2e[a-1]
                     x2array = np.append(x2array,x2)
-                    print('x2 = ' + str(x2))
+                    # print('x2 = ' + str(x2))
 
                     # QUESTION: for loop to create dN/dx? Is dN/dx an array or a specific value?
-                    dNdx = N1e*(x1)**(-1)
+                    dNdx = N1e*(x1**(-1.))
+                    # print('dNdx = ' + str(dNdx))
 
-                    d2Ndx2 = (N2e - dNdx*x2)*(x1**(-2.))
+                    # d2Ndx2 = (N2e - dNdx*x2)*(x1**(-2.))
+
+                    d2Ndx2 = N2e*((he/2.)**(-2.))
+                    # d2Ndx2 = N2e*(x1**(-2.))
+                    # print('d2Ndx2 = ' + str(d2Ndx2))
 
                     # fi = f
-                    fi = x**2 # (CHECKED, CORRECT)
-                    print('f(x) = ' + str(fi))
-
+                    fi = x**2. # (CHECKED, CORRECT)
+                    # print('f(x) = ' + str(fi))
+                    print('wi = ' + str(wi))
+                    print('x,ksi = ' + str(he/2.))
                     # calculate fe vector
                     for a in range(0,nen):
                         fe[a] += Ne[a]*fi*(he/2.)*wi # QUESTION: is this defined correctly?
                         for b in range(0,nen):
-                            ke[a,b] += d2Ndx2[a]*E*I*d2Ndx2[b]*(2./he)*wi # FIXME: This is almost correct, but not quite
+                            # ke[a,b] += d2Ndx2[a]*E*I*d2Ndx2[b]*(2./he)*wi # FIXME: This is almost correct, but not quite
+                            ke[a,b] += N2e[a]*E*I*N2e[b]*((2./he)**3.)*wi # FIXME: This is almost correct, but not quite
 
                     print('fe = ' + str(fe))
                     print('ke = ' + str(ke))
