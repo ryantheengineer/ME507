@@ -260,8 +260,8 @@ if __name__ == "__main__":
             activenodes = len(xG)-1
             # print('xG length: ',len(xG))
             print('# of active nodes: ',activenodes)
-            K = np.zeros([activenodes,activenodes])
-            F = np.zeros([activenodes,1])
+            K = np.zeros([activenodes-1,activenodes-1])
+            F = np.zeros([activenodes-1,1])
             col = 0
             for e in range(1,elements+1):
                 print('\n')
@@ -345,14 +345,15 @@ if __name__ == "__main__":
                     # d2Ndx2 = N2e*(x1**(-2.))
                     # print('d2Ndx2 = ' + str(d2Ndx2))
 
-                    # fi = f
-                    fi = x**2. # (CHECKED, CORRECT)
+                    fi = f
+                    # fi = x**2. # (CHECKED, CORRECT)
                     # print('f(x) = ' + str(fi))
                     print('wi = ' + str(wi))
                     print('x,ksi = ' + str(he/2.))
                     # calculate fe vector
                     for a in range(0,nen):
-                        fe[a] += Ne[a]*fi*(he/2.)*wi # QUESTION: is this defined correctly?
+                        fe[a] += N1e[a]*fi*wi # QUESTION: is this defined correctly?
+                        # fe[a] += N1e[a]*fi*(he/2.)*wi # QUESTION: is this defined correctly?
                         for b in range(0,nen):
                             # ke[a,b] += d2Ndx2[a]*E*I*d2Ndx2[b]*(2./he)*wi # FIXME: This is almost correct, but not quite
                             ke[a,b] += N2e[a]*E*I*N2e[b]*((2./he)**3.)*wi # FIXME: This is almost correct, but not quite
@@ -378,8 +379,8 @@ if __name__ == "__main__":
             # print('x1array = ',x1array)
             # print('x2array = ',x2array)
             # print('Narray = ',Narray)
-            print('F = ',F)
             print('K = ',K)
+            print('F = ',F)
 
             d = np.zeros([activenodes,1])
             d = np.linalg.solve(K,F)
