@@ -360,11 +360,11 @@ if __name__ == "__main__":
                 for A in range(P+1):
                     uh[x] += d[loc+A]*Narray[A,x]
 
-            count += 1
             maxtip = uh[0]
             print('\tMax tip deflection = ' + str(maxtip))
 
             deflections[p.index(P),nel.index(elements)] = maxtip
+            count += 1
 
         exactsol[nel.index(elements)] = f/(8.0*E*I)
 
