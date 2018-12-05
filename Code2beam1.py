@@ -221,8 +221,12 @@ if __name__ == "__main__":
     ksiint = gaussksi(nint)
     W = gaussW(nint)
 
+    # Set up holding array for tip deflections. Rows for p and columns for nel
+    deflections = np.zeros([len(p),len(nel)])
+    exactsol = np.zeros([len(nel),1])
+
     for elements in nel:
-        plt.figure()
+        # plt.figure()
         print('\nn = ' + str(elements))
 
         for P in p:
@@ -356,48 +360,22 @@ if __name__ == "__main__":
                 for A in range(P+1):
                     uh[x] += d[loc+A]*Narray[A,x]
 
-            # Calculate u(x)
-            u = np.zeros([len(xushift),1])
-            for j in range(len(xushift)):
-                u[j] = ((f*xushift[j]**2.)/(24.*E*I))*(2.+(2.-xushift[j])**2.)
-
-            # Plot u(x) and uh(x) for the given case
-            title = ('FEA solution for n = ' + str(elements))
-            plt.title(title)
-            plt.xlabel('Linear position along beam (x)')
-            plt.ylabel('Displacement (u)')
-            uhlabel = 'uh(x) for p = ' + str(P)
-            if P == 2:
-                COLOR = 'b'
-            if P == 3:
-                COLOR = 'g'
-            plt.plot(xarray,uh,label=uhlabel,linewidth=1,color=COLOR,linestyle='--')
-
-            # Calculate the global error
-            i = 0
-            total = 0.0
-            globerr = 0.0
-            diff = np.zeros([len(uh),1])
-            ab2 = np.zeros([len(uh),1])
-            gauss = np.zeros([len(uh),1])
-            for x in range(len(uh)):
-                diff[x] = u[x] - uh[x]
-                ab2[x] = (np.abs(diff[x]))**2
-                wi = W[i]
-                gauss[x] = ab2[x]*0.5*he*wi
-                globerr += gauss[x]
-                i += 1  # increase the integration point index on the element level
-                if i == 3:
-                    i = 0
-            globerr = np.sqrt(globerr)
-            evector[count] = globerr
             count += 1
             maxtip = uh[0]
             print('\tMax tip deflection = ' + str(maxtip))
-            tiperror = np.abs(uh[0] - u[0])
-            print('\tTip error = ' + str(tiperror))
-            print('\tGlobal error = ' + str(globerr))
 
-        plt.plot(xarray,u,label='u(x)',linewidth=1,color='r')
-        plt.legend()
-        plt.show()
+            deflections[p.index(P),nel.index(elements)] = maxtip
+
+        exactsol[nel.index(elements)] = f/(8.0*E*I)
+
+    # Plot the results asked for in part 2, problem 1:
+    plt.title('Max tip deflection calculations')
+    plt.xlabel('Number of elements (n)')
+    plt.ylabel('Tip deflection (u)')
+    plt.plot(nel,deflections[0,:],label='p = 2',linewidth=1,color='b',
+        linestyle='--',marker='o')
+    plt.plot(nel,deflections[1,:],label='p = 3',linewidth=1,color='g',
+        linestyle='--',marker='o')
+    plt.plot(nel,exactsol,label='Exact',linewidth=1,color='r')
+    plt.legend()
+    plt.show()
