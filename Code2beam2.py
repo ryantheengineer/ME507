@@ -207,13 +207,13 @@ def Bspline(e,p,nel,ksi):
 
 if __name__ == "__main__":
     ######### INPUT ###########
-    nel = [1, 10, 100]
+    elements = 10
+    nel = [elements]
     p = [2, 3]
     E = 1000000.0
-    b = 0.005
-    h = 0.005
-    f = 10.*(h**3.)
-    I = (b*(h**3.))/12.
+    base = 0.005
+    height = [0.1, 0.01, 0.005, 0.002, 0.001]
+    L = 1.0
 
     ######### SETUP ###########
     # Set up gauss quadrature rule
@@ -222,12 +222,19 @@ if __name__ == "__main__":
     W = gaussW(nint)
 
     # Set up holding array for tip deflections. Rows for p and columns for nel
-    deflections = np.zeros([len(p),len(nel)])
-    exactsol = np.zeros([len(nel),1])
+    deflections = np.zeros([len(p),len(height)])
+    exactsol = np.zeros([len(height),1])
+    slenderness = np.zeros([len(height),1])
+    hindex = 0
 
-    for elements in nel:
-        # plt.figure()
-        print('\nn = ' + str(elements))
+    for h in height:
+        f = 10.*(h**3.)
+        I = (base*(h**3.))/12.
+        slenderness[height.index(h)] = L/h
+
+        # for elements in nel:
+        #     # plt.figure()
+        #     print('\nn = ' + str(elements))
 
         for P in p:
             print('\n\tp = ' + str(P))
@@ -360,22 +367,27 @@ if __name__ == "__main__":
                 for A in range(P+1):
                     uh[x] += d[loc+A]*Narray[A,x]
 
-            maxtip = uh[0]
+            maxtip = xarray[0]*((uh[0]-uh[1])/(np.abs(xarray[0]-xarray[1]))) + uh[0]
+            # maxtip = uh[0]
             print('\tMax tip deflection = ' + str(maxtip))
 
-            deflections[p.index(P),nel.index(elements)] = maxtip
+            deflections[p.index(P),hindex] = maxtip
             count += 1
 
-        exactsol[nel.index(elements)] = f/(8.0*E*I)
+        exactsol[hindex] = 15./(E*base)
+        print('E = ' + str(E))
+        print('base = ' + str(base))
+        print('exact value = ' + str(exactsol[hindex]))
+        hindex += 1
 
     # Plot the results asked for in part 2, problem 1:
-    plt.title('Max tip deflection calculations')
+    plt.title('Part 2.2')
     plt.xlabel('Number of elements (n)')
     plt.ylabel('Tip deflection (u)')
-    plt.plot(nel,deflections[0,:],label='p = 2',linewidth=1,color='b',
+    plt.plot(slenderness,deflections[0,:],label='p = 2',linewidth=1,color='b',
         linestyle='--',marker='o')
-    plt.plot(nel,deflections[1,:],label='p = 3',linewidth=1,color='g',
+    plt.plot(slenderness,deflections[1,:],label='p = 3',linewidth=1,color='g',
         linestyle='--',marker='o')
-    plt.plot(nel,exactsol,label='Exact',linewidth=1,color='r')
+    plt.plot(slenderness,exactsol,label='Exact',linewidth=1,color='r')
     plt.legend()
     plt.show()

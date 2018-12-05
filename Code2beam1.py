@@ -360,7 +360,7 @@ if __name__ == "__main__":
                 for A in range(P+1):
                     uh[x] += d[loc+A]*Narray[A,x]
 
-            maxtip = uh[0]
+            maxtip = xarray[0]*((uh[0]-uh[1])/(np.abs(xarray[0]-xarray[1]))) + uh[0]
             print('\tMax tip deflection = ' + str(maxtip))
 
             deflections[p.index(P),nel.index(elements)] = maxtip
@@ -369,7 +369,7 @@ if __name__ == "__main__":
         exactsol[nel.index(elements)] = f/(8.0*E*I)
 
     # Plot the results asked for in part 2, problem 1:
-    plt.title('Max tip deflection calculations')
+    plt.title('Part 2.1')
     plt.xlabel('Number of elements (n)')
     plt.ylabel('Tip deflection (u)')
     plt.plot(nel,deflections[0,:],label='p = 2',linewidth=1,color='b',
