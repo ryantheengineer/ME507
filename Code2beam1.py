@@ -15,6 +15,7 @@ def Bap(a,p,ksi):
     B = (1./(2.**p))*pa_1*((1-ksi)**(p-(a-1)))*((1+ksi)**(a-1))
     return B
 
+
 # 1st derivative of Bap with respect to ksi (as given by Wolfram Alpha)
 def Bap1(a,p,ksi):
     num1 = (a-1.)*math.factorial(p)*((ksi+1.)**(a-2.))*((1.-ksi)**(-a+p+1.))
@@ -24,6 +25,7 @@ def Bap1(a,p,ksi):
     B1 = (num1/den1) - (num2/den2)
     return B1
 
+
 # 2nd derivative of Bap with respect to ksi (as given by Wolfram Alpha)
 def Bap2(a,p,x):
     B2 = (((1. - x)**(-1. - a + p))*((1. + x)**(-3. + a))*(4. + 4.*(a**2.)
@@ -32,9 +34,10 @@ def Bap2(a,p,x):
 
     return B2
 
+
 # Extraction operators, which we use to convert Bezier curves to B-splines
 # Define Ce for p = 2
-def Ce2(e,nel): # NOTE: may need to check indexing since elements need to be adjusted to start at 0?
+def Ce2(e,nel):
     if e == 1:
         Ce = np.array([[1., 0, 0],
                        [0, 1., 0.5],
@@ -48,6 +51,7 @@ def Ce2(e,nel): # NOTE: may need to check indexing since elements need to be adj
                        [0.5, 1., 0],
                        [0, 0, 1.]])
     return Ce
+
 
 # Define Ce for p = 3
 def Ce3(e,nel):
@@ -78,6 +82,7 @@ def Ce3(e,nel):
                        [0, 0, 0, 1.]])
     return Ce
 
+
 # Set up quadrature rule (not integration): ksi, w
 def gaussksi(nint):
     ksiint = np.zeros([nint,1])
@@ -91,6 +96,7 @@ def gaussksi(nint):
         ksiint[1] = 0
         ksiint[2] = np.sqrt(3./5.)
     return ksiint
+
 
 def gaussW(nint):
     W = np.zeros([nint,1])
@@ -122,12 +128,13 @@ def IEN(a,e):
     #     A = e + 4
     return A
 
+
 # Take in global node A. If the global node corresponds to an inactive node, in
 # the case of this problem, at L = 1, then the ID array outputs 0 and continues
 # numbering afterward. So maybe have it take in a list of inactive node numbers?
 def ID(node,xGlength):
     eq = 0
-    if node == xGlength or node == xGlength-1:  # NOTE: This is a change from the original Code2. Check on this.
+    if node == xGlength or node == xGlength-1:
         eq = 0
     else:
         eq = node
@@ -137,6 +144,7 @@ def LM(a,e,xGlength):
     A = IEN(a,e)
     P = ID(A,xGlength)
     return P
+
 
 # Compute node locations
 # Create knot vector
@@ -151,6 +159,7 @@ def knot(p,nel):
             temp += he
         s[i] = temp
     return s
+
 
 # Use knot vector and p value to determine node locations
 def xAG(p,s,nel):
@@ -189,10 +198,7 @@ def Bspline(e,p,nel,ksi):
     for i in range(len(ksi)):
         for j in range(p+1):
             Becol[j] = Be[j,i]
-        # print(np.shape(Becol))
-        # print(np.shape(Ce*Becol))
         Necol = np.matmul(Ce,Becol)
-        # print(np.shape(Necol))
         for j in range(p+1):
             Ne[j,i] = Necol[j]
     return Ne
@@ -202,15 +208,12 @@ def Bspline(e,p,nel,ksi):
 if __name__ == "__main__":
     ######### INPUT ###########
     nel = [1, 10, 100]
-    # nel = [10]
     p = [2, 3]
-    # p = [2]
     E = 1000000.0
     b = 0.005
     h = 0.005
     f = 10.*(h**3.)
     I = (b*(h**3.))/12.
-    # print('I = ' + str(I))
 
     ######### SETUP ###########
     # Set up gauss quadrature rule
@@ -237,32 +240,26 @@ if __name__ == "__main__":
             Narray = np.zeros([P+1,elements*nint])
             N1array = np.zeros([P+1,elements*nint])
             N2array = np.zeros([P+1,elements*nint])
-            # dNdx = np.zeros([P+1,elements*nint])
-            # d2Ndx2 = np.zeros([P+1,elements*nint])
-            # print('Narray dimensions: ',np.shape(Narray))
+
             xarray = np.zeros([1])
             x1array = np.zeros([1])
             x2array = np.zeros([1])
-            # print('knotvector = ',knotvector)
-            # xG = []
+
             xG = xAG(P,knotvector,elements)  # nodes
-            # print('xG = ',xG)
             xGlength = len(xG)
             nodevector[count] = xGlength
             activenodes = len(xG)-1
-            # print('xG length: ',len(xG))
-            # print('# of active nodes: ',activenodes)
+
             K = np.zeros([activenodes-1,activenodes-1])
             F = np.zeros([activenodes-1,1])
             col = 0
+
             for e in range(1,elements+1):
-                # print('\n')
-                # print('Element: ',e-1)
                 if P == 2:
                     Ce = Ce2(e,elements)
                 if P == 3:
                     Ce = Ce3(e,elements)
-                # print('Ce = ',Ce)
+
                 if elements == 1 and P == 2:
                     Ce = np.array([[1., 0., 0.],
                                    [0., 1., 0.],
@@ -278,8 +275,6 @@ if __name__ == "__main__":
 
                 # INTEGRATION LOOP
                 for i in range(1,nint+1):
-                    # print('\n')
-                    # print('\ti = ' + str(i-1))
                     wi = W[i-1]
                     Be = np.zeros([P+1,1])
                     B1e = np.zeros([P+1,1])
@@ -287,25 +282,21 @@ if __name__ == "__main__":
                     x = 0.0
                     x1 = 0.0
                     x2 = 0.0
+
                     # iterate on the Bernstein polynomials for the element
                     for a in range(1,P+2):
                         Be[a-1] = Bap(a,P,ksiint[i-1])
                         B1e[a-1] = Bap1(a,P,ksiint[i-1])
                         B2e[a-1] = Bap2(a,P,ksiint[i-1])
-                    Ne = np.matmul(Ce,Be) # (CHECKED, CORRECT)
-                    N1e = np.matmul(Ce,B1e) # 1st derivative of Ne in parent domain (CHECKED, CORRECT)
+                    Ne = np.matmul(Ce,Be)
+                    N1e = np.matmul(Ce,B1e) # 1st derivative of Ne in parent domain
                     N2e = np.matmul(Ce,B2e) # 2nd derivative of Ne in parent domain
-                    # print('xG = ', xG[a-1])
-                    # print('Ne = ' + str(Ne))
-                    # print('N1e = ' + str(N1e))
-                    # print('N2e = ' + str(N2e))
 
                     # insert Ne into Narray
                     for row in range(P+1):
                         # column of Narray is the integration point
                         # row of Narray is the shape function number
-                        Narray[row,col] = Ne[row] # Narray is in the parent domain, and includes all element values put into one array for the whole beam
-                        # print('Narray = ',Narray)
+                        Narray[row,col] = Ne[row]
                     for row in range(P+1):
                         N1array[row,col] = N1e[row]
                     for row in range(P+1):
@@ -313,10 +304,8 @@ if __name__ == "__main__":
                     col += 1
 
                     for a in range(1,P+2):
-                        x += xG[a-1+(e-1)]*Ne[a-1] # (CHECKED, CORRECT)
+                        x += xG[a-1+(e-1)]*Ne[a-1]
                     xarray = np.append(xarray,x) # x based on ksi; includes all values, not just a single element
-                    # print('x = ' + str(x))
-                    # print('xarray = ',xarray)
 
                     for a in range(1,P+2):
                         x1 += xG[a-1+(e-1)]*N1e[a-1]
@@ -325,29 +314,18 @@ if __name__ == "__main__":
                     for a in range(1,P+2):
                         x2 += xG[a-1+(e-1)]*N2e[a-1]
                     x2array = np.append(x2array,x2)
-                    # print('x2 = ' + str(x2))
 
                     fi = f
-                    # print('f(x) = ' + str(fi))
-                    # print('wi = ' + str(wi))
-                    # print('x,ksi = ' + str(he/2.))
+
                     # calculate fe vector
                     for a in range(0,nen):
                         fe[a] += Ne[a]*fi*(he/2.)*wi
                         for b in range(0,nen):
-                            # ke[a,b] += d2Ndx2[a]*E*I*d2Ndx2[b]*(2./he)*wi # FIXME: This is almost correct, but not quite
-                            ke[a,b] += N2e[a]*E*I*N2e[b]*((2./he)**3.)*wi # FIXME: This is almost correct, but not quite
-
-                    # print('fe = ' + str(fe))
-                    # print('ke = ' + str(ke))
-                    # print('\n')
+                            ke[a,b] += N2e[a]*E*I*N2e[b]*((2./he)**3.)*wi
 
                 for a in range(1,nen+1):
-                    # print('a = ',a)
-                    # print('LM(a,e)= ',LM(a,e,xGlength))
                     if LM(a,e,xGlength) > 0:
                         F[LM(a,e,xGlength)-1] += fe[a-1]
-                        # print('F = ',F)
                         for b in range(1,nen+1):
                             if LM(b,e,xGlength) > 0:
                                 K[LM(a,e,xGlength)-1,LM(b,e,xGlength)-1] += ke[a-1,b-1]
@@ -367,10 +345,8 @@ if __name__ == "__main__":
 
             d = np.zeros([activenodes,1])
             d = np.linalg.solve(K,F)
-
             # append 0 on the end for calculating uh
             d = np.append(d,[0.,0.])
-            # d = np.append(d,0.)
             # print('d = ',d)
 
             # Calculate uh(x)
@@ -385,7 +361,7 @@ if __name__ == "__main__":
             for j in range(len(xushift)):
                 u[j] = ((f*xushift[j]**2.)/(24.*E*I))*(2.+(2.-xushift[j])**2.)
 
-            # Plot u(x) and uh(x) for the given combination of elements and load
+            # Plot u(x) and uh(x) for the given case
             title = ('FEA solution for n = ' + str(elements))
             plt.title(title)
             plt.xlabel('Linear position along beam (x)')
@@ -407,7 +383,7 @@ if __name__ == "__main__":
             for x in range(len(uh)):
                 diff[x] = u[x] - uh[x]
                 ab2[x] = (np.abs(diff[x]))**2
-                wi = W[i]   # want indices 0 through 2, repeating 5 times
+                wi = W[i]
                 gauss[x] = ab2[x]*0.5*he*wi
                 globerr += gauss[x]
                 i += 1  # increase the integration point index on the element level
@@ -419,28 +395,9 @@ if __name__ == "__main__":
             maxtip = uh[0]
             print('\tMax tip deflection = ' + str(maxtip))
             tiperror = np.abs(uh[0] - u[0])
-            # print('\n')
             print('\tTip error = ' + str(tiperror))
             print('\tGlobal error = ' + str(globerr))
 
         plt.plot(xarray,u,label='u(x)',linewidth=1,color='r')
         plt.legend()
         plt.show()
-        # convergence = 0
-        # convergence = (np.log10(evector[-1]/evector[0]))/(np.log10(hvector[-1]/hvector[0]))
-
-        # ## Log-log plots ##
-        # plt.figure()
-        # plt.title('Rate of convergence for p = ' + str(P))
-        # plt.xlabel('Element size (h)')
-        # plt.ylabel('Global error (e)')
-        # # plt.text(hvector[1],evector[2],'Rate of convergence = '+str(convergence),horizontalalignment='center')
-        # plt.loglog(hvector,evector,linestyle='--',marker='o')
-        # plt.show()
-        #
-        # plt.figure()
-        # plt.title('Error vs. Nodes for p = ' + str(P))
-        # plt.xlabel('Number of nodes')
-        # plt.ylabel('Global error (e)')
-        # plt.loglog(nodevector,evector,linestyle='--',marker='o')
-        # plt.show()
