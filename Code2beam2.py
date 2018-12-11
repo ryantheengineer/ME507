@@ -382,7 +382,7 @@ if __name__ == "__main__":
 
     # Plot the results asked for in part 2, problem 1:
     plt.title('Part 2.2')
-    plt.xlabel('Number of elements (n)')
+    plt.xlabel('Beam slenderness (L/h)')
     plt.ylabel('Tip deflection (u)')
     plt.plot(slenderness,deflections[0,:],label='p = 2',linewidth=1,color='b',
         linestyle='--',marker='o')
