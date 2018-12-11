@@ -207,7 +207,7 @@ def Bspline(e,p,nel,ksi):
 
 if __name__ == "__main__":
     ######### INPUT ###########
-    nel = [1, 10, 100]
+    nel = [1, 5, 10, 20, 50, 100]
     p = [1]
     # p = [1, 2, 3]
     E = 1000000.0
@@ -215,6 +215,7 @@ if __name__ == "__main__":
     h = 0.005
     f = 10.*(h**3.)
     I = (b*(h**3.))/12.
+    rho = 1.0
 
     ######### SETUP ###########
 
@@ -262,6 +263,7 @@ if __name__ == "__main__":
             activenodes = len(xG)-1
 
             K = np.zeros([activenodes-1,activenodes-1])
+            M = np.zeros([activenodes-1,activenodes-1])
             F = np.zeros([activenodes-1,1])
             col = 0
 
@@ -286,6 +288,7 @@ if __name__ == "__main__":
 
                 fe = np.zeros([nen,1])
                 ke = np.zeros([nen,nen])
+                me = np.zeros([nen,nen])
 
                 # INTEGRATION LOOP
                 for i in range(1,nint+1):
@@ -302,9 +305,9 @@ if __name__ == "__main__":
                         Be[a-1] = Bap(a,P,ksiint[i-1])
                         B1e[a-1] = Bap1(a,P,ksiint[i-1])
                         B2e[a-1] = Bap2(a,P,ksiint[i-1])
-                    print('Be for P = ' + str(P) + ' is ' + str(Be))
+                    # print('Be for P = ' + str(P) + ' is ' + str(Be))
                     Ne = np.matmul(Ce,Be)
-                    print('Ne for P = ' + str(P) + ' is ' + str(Ne))
+                    # print('Ne for P = ' + str(P) + ' is ' + str(Ne))
                     N1e = np.matmul(Ce,B1e) # 1st derivative of Ne in parent domain
                     N2e = np.matmul(Ce,B2e) # 2nd derivative of Ne in parent domain
 
@@ -338,6 +341,8 @@ if __name__ == "__main__":
                         fe[a] += Ne[a]*fi*(he/2.)*wi
                         for b in range(0,nen):
                             ke[a,b] += N2e[a]*E*I*N2e[b]*((2./he)**3.)*wi
+                            me[a,b] += Ne[a]*rho*Ne[b]*(he/2.)*wi
+                    print('me = ' + str(me))
 
                 for a in range(1,nen+1):
                     if LM(a,e,xGlength) > 0:
@@ -345,6 +350,13 @@ if __name__ == "__main__":
                         for b in range(1,nen+1):
                             if LM(b,e,xGlength) > 0:
                                 K[LM(a,e,xGlength)-1,LM(b,e,xGlength)-1] += ke[a-1,b-1]
+                                M[LM(a,e,xGlength)-1,LM(b,e,xGlength)-1] += me[a-1,b-1]
+
+
+            # Get K and M matrices and pass to an eigensolver
+            print('K = ' + str(K))
+            print('M = ' + str(M))
+
 
             xarray = np.delete(xarray,0)
             xushift = np.zeros([len(xarray),1])
@@ -386,10 +398,10 @@ if __name__ == "__main__":
     plt.ylabel('Tip deflection (u)')
     plt.plot(nel,deflections[0,:],label='p = 1',linewidth=1,color='b',
         linestyle='--',marker='o')
-    plt.plot(nel,deflections[1,:],label='p = 2',linewidth=1,color='g',
-        linestyle='--',marker='o')
-    plt.plot(nel,deflections[2,:],label='p = 3',linewidth=1,color='r',
-        linestyle='--',marker='o')
+    # plt.plot(nel,deflections[1,:],label='p = 2',linewidth=1,color='g',
+    #     linestyle='--',marker='o')
+    # plt.plot(nel,deflections[2,:],label='p = 3',linewidth=1,color='r',
+    #     linestyle='--',marker='o')
     plt.plot(nel,exactsol,label='Exact',linewidth=1)
     plt.legend()
     plt.show()
