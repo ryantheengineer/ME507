@@ -216,6 +216,11 @@ if __name__ == "__main__":
     # Choose which case to examine (comment on or off)
     case = 'Fixed-fixed'
     # case = 'Free-fixed'
+    # FIXME: I think there's some size definition that is still dependent on
+    # the beam problem, meaning two fixed points at the end. This works for
+    # fixed-fixed, but not for free-fixed? The eigenvalue vector ends up being
+    # 999 elements long instead of 1000 for the free-fixed, so it's something
+    # to do with that I think.
 
 
     p = [1, 2, 3]
