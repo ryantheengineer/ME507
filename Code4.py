@@ -210,16 +210,15 @@ if __name__ == "__main__":
     ######### INPUT ###########
     # nel = [1, 5, 10, 20, 50, 100]
     nel = [10]
-    p = [2]
-    modes = 10  # How many of the first eigenmodes to solve for
-    wn = np.zeros([modes,1])
+    # p = [2]
+    # modes = 10  # How many of the first eigenmodes to solve for
 
     # Choose which case to examine (comment on or off)
     case = 'Fixed-fixed'
     # case = 'Free-fixed'
 
 
-    # p = [1, 2, 3]
+    p = [1, 2, 3]
     E = 1000000.0
     # b = 0.005
     # h = 0.005
@@ -254,138 +253,162 @@ if __name__ == "__main__":
         # Determine the number of elements based on the number of active nodes, N
         elements = N - P + ng
 
-        for n in range(1,modes+1):
+
+        # evector = np.zeros([len(nel),1])
+        # hvector = np.zeros([len(nel),1])
+        # for i in range(len(hvector)):
+        #     hvector[i] = 1./nel[i]
+        # nodevector = np.zeros([len(nel),1])
+        count = 0
+
+        he = 1./elements
+        nen = P + 1     # number of element nodes
+        knotvector = knot(P,elements)
+        Narray = np.zeros([P+1,elements*nint])
+        N1array = np.zeros([P+1,elements*nint])
+        N2array = np.zeros([P+1,elements*nint])
+
+        xarray = np.zeros([1])
+        x1array = np.zeros([1])
+        x2array = np.zeros([1])
+
+        xG = xAG(P,knotvector,elements)  # nodes
+        xGlength = len(xG)
+        # nodevector[count] = xGlength
+        activenodes = len(xG)-1     #FIXME: The number of active nodes is determined by the BCs
+
+        K = np.zeros([activenodes-1,activenodes-1])
+        M = np.zeros([activenodes-1,activenodes-1])
+        # F = np.zeros([activenodes-1,1])
+        col = 0
+
+        for e in range(1,elements+1):
+            if P == 1:
+                Ce = np.array([[1.,0.],
+                               [0.,1.]])
+            if P == 2:
+                Ce = Ce2(e,elements)
+            if P == 3:
+                Ce = Ce3(e,elements)
+
+            if elements == 1 and P == 2:
+                Ce = np.array([[1., 0., 0.],
+                               [0., 1., 0.],
+                               [0., 0., 1.]])
+            if elements < 5 and P == 3:
+                Ce = np.array([[1.,0.,0.,0.],
+                               [0.,1.,0.,0.],
+                               [0.,0.,1.,0.],
+                               [0.,0.,0.,1.]])
+
+            # fe = np.zeros([nen,1])
+            ke = np.zeros([nen,nen])
+            me = np.zeros([nen,nen])
+
+            # INTEGRATION LOOP
+            for i in range(1,nint+1):
+                wi = W[i-1]
+                Be = np.zeros([P+1,1])
+                B1e = np.zeros([P+1,1])
+                B2e = np.zeros([P+1,1])
+                x = 0.0
+                x1 = 0.0
+                x2 = 0.0
+
+                # iterate on the Bernstein polynomials for the element
+                for a in range(1,P+2):
+                    Be[a-1] = Bap(a,P,ksiint[i-1])
+                    B1e[a-1] = Bap1(a,P,ksiint[i-1])
+                    B2e[a-1] = Bap2(a,P,ksiint[i-1])
+                # print('Be for P = ' + str(P) + ' is ' + str(Be))
+                Ne = np.matmul(Ce,Be)
+                # print('Ne for P = ' + str(P) + ' is ' + str(Ne))
+                N1e = np.matmul(Ce,B1e) # 1st derivative of Ne in parent domain
+                N2e = np.matmul(Ce,B2e) # 2nd derivative of Ne in parent domain
+
+                # insert Ne into Narray
+                for row in range(P+1):
+                    # column of Narray is the integration point
+                    # row of Narray is the shape function number
+                    Narray[row,col] = Ne[row]
+                for row in range(P+1):
+                    N1array[row,col] = N1e[row]
+                for row in range(P+1):
+                    N2array[row,col] = N2e[row]
+                col += 1
+
+                for a in range(1,P+2):
+                    x += xG[a-1+(e-1)]*Ne[a-1]
+                xarray = np.append(xarray,x) # x based on ksi; includes all values, not just a single element
+
+                for a in range(1,P+2):
+                    x1 += xG[a-1+(e-1)]*N1e[a-1]
+                x1array = np.append(x1array,x1)
+
+                for a in range(1,P+2):
+                    x2 += xG[a-1+(e-1)]*N2e[a-1]
+                x2array = np.append(x2array,x2)
+
+                # fi = f
+
+                # calculate fe vector
+                for a in range(0,nen):
+                    # fe[a] += Ne[a]*fi*(he/2.)*wi
+                    for b in range(0,nen):
+                        ke[a,b] += N1e[a]*E*N1e[b]*(2./he)*wi
+                        me[a,b] += Ne[a]*rho*Ne[b]*(he/2.)*wi   # NOTE: this needs to be checked
+                # print('me = ' + str(me))
+
+            for a in range(1,nen+1):
+                if LM(a,e,xGlength) > 0:
+                    # F[LM(a,e,xGlength)-1] += fe[a-1]
+                    for b in range(1,nen+1):
+                        if LM(b,e,xGlength) > 0:
+                            K[LM(a,e,xGlength)-1,LM(b,e,xGlength)-1] += ke[a-1,b-1]
+                            M[LM(a,e,xGlength)-1,LM(b,e,xGlength)-1] += me[a-1,b-1]
+
+
+        wn = np.zeros([N,1])
+        normmodenum = np.zeros([N,1])
+        for n in range(1,N+1):
             if case == 'Fixed-fixed':
                 wn[n-1] = (n*np.pi/L)*np.sqrt(E/rho)
             if case == 'Free-fixed':
                 wn[n-1] = (n - 0.5)*(np.pi/L)*np.sqrt(E/rho)
+            normmodenum[n-1] = float(n)/float(N)
 
-            # evector = np.zeros([len(nel),1])
-            # hvector = np.zeros([len(nel),1])
-            # for i in range(len(hvector)):
-            #     hvector[i] = 1./nel[i]
-            # nodevector = np.zeros([len(nel),1])
-            count = 0
+        # Get K and M matrices and pass to an eigensolver
+        # print('K = ' + str(K))
+        # print('M = ' + str(M))
+        eigvals, eigvecs = eigh(K, M, eigvals_only=False)
+        print('\nEigenvalue shape is: ' + str(np.shape(eigvals)))
+        # print('Eigenvalues = ', eigvals)
+        # print('\nEigenvector matrix shape is: ' + str(np.shape(eigvecs)))
+        # print('Eigenvectors = ', eigvecs)
+        xarray = np.delete(xarray,0)
 
-            he = 1./elements
-            nen = P + 1     # number of element nodes
-            knotvector = knot(P,elements)
-            Narray = np.zeros([P+1,elements*nint])
-            N1array = np.zeros([P+1,elements*nint])
-            N2array = np.zeros([P+1,elements*nint])
+        compfrequencies = np.zeros([len(eigvals),1])
+        erratio = np.zeros([len(eigvals),1])
+        for v in range(len(eigvals)):
+            compfrequencies[v] = np.sqrt(eigvals[v])
+            erratio[v] = compfrequencies[v]/wn[v]
+        # # Calculate uh(x) (Mode shape)
+        # uh = np.zeros([len(xarray),1])
+        # for x in range(len(uh)):
+        #     loc = x/nint # integer devision returns the element number
+        #     for A in range(P+1):
+        #         uh[x] += eigvecs[loc+A]*Narray[A,x]
 
-            xarray = np.zeros([1])
-            x1array = np.zeros([1])
-            x2array = np.zeros([1])
+        # plt.plot(x,uh)
 
-            xG = xAG(P,knotvector,elements)  # nodes
-            xGlength = len(xG)
-            # nodevector[count] = xGlength
-            activenodes = len(xG)-1     #FIXME: The number of active nodes is determined by the BCs
-
-            K = np.zeros([activenodes-1,activenodes-1])
-            M = np.zeros([activenodes-1,activenodes-1])
-            # F = np.zeros([activenodes-1,1])
-            col = 0
-
-            for e in range(1,elements+1):
-                if P == 1:
-                    Ce = np.array([[1.,0.],
-                                   [0.,1.]])
-                if P == 2:
-                    Ce = Ce2(e,elements)
-                if P == 3:
-                    Ce = Ce3(e,elements)
-
-                if elements == 1 and P == 2:
-                    Ce = np.array([[1., 0., 0.],
-                                   [0., 1., 0.],
-                                   [0., 0., 1.]])
-                if elements < 5 and P == 3:
-                    Ce = np.array([[1.,0.,0.,0.],
-                                   [0.,1.,0.,0.],
-                                   [0.,0.,1.,0.],
-                                   [0.,0.,0.,1.]])
-
-                # fe = np.zeros([nen,1])
-                ke = np.zeros([nen,nen])
-                me = np.zeros([nen,nen])
-
-                # INTEGRATION LOOP
-                for i in range(1,nint+1):
-                    wi = W[i-1]
-                    Be = np.zeros([P+1,1])
-                    B1e = np.zeros([P+1,1])
-                    B2e = np.zeros([P+1,1])
-                    x = 0.0
-                    x1 = 0.0
-                    x2 = 0.0
-
-                    # iterate on the Bernstein polynomials for the element
-                    for a in range(1,P+2):
-                        Be[a-1] = Bap(a,P,ksiint[i-1])
-                        B1e[a-1] = Bap1(a,P,ksiint[i-1])
-                        B2e[a-1] = Bap2(a,P,ksiint[i-1])
-                    # print('Be for P = ' + str(P) + ' is ' + str(Be))
-                    Ne = np.matmul(Ce,Be)
-                    # print('Ne for P = ' + str(P) + ' is ' + str(Ne))
-                    N1e = np.matmul(Ce,B1e) # 1st derivative of Ne in parent domain
-                    N2e = np.matmul(Ce,B2e) # 2nd derivative of Ne in parent domain
-
-                    # insert Ne into Narray
-                    for row in range(P+1):
-                        # column of Narray is the integration point
-                        # row of Narray is the shape function number
-                        Narray[row,col] = Ne[row]
-                    for row in range(P+1):
-                        N1array[row,col] = N1e[row]
-                    for row in range(P+1):
-                        N2array[row,col] = N2e[row]
-                    col += 1
-
-                    for a in range(1,P+2):
-                        x += xG[a-1+(e-1)]*Ne[a-1]
-                    xarray = np.append(xarray,x) # x based on ksi; includes all values, not just a single element
-
-                    for a in range(1,P+2):
-                        x1 += xG[a-1+(e-1)]*N1e[a-1]
-                    x1array = np.append(x1array,x1)
-
-                    for a in range(1,P+2):
-                        x2 += xG[a-1+(e-1)]*N2e[a-1]
-                    x2array = np.append(x2array,x2)
-
-                    # fi = f
-
-                    # calculate fe vector
-                    for a in range(0,nen):
-                        # fe[a] += Ne[a]*fi*(he/2.)*wi
-                        for b in range(0,nen):
-                            ke[a,b] += N1e[a]*E*N1e[b]*(2./he)*wi
-                            me[a,b] += Ne[a]*rho*Ne[b]*(he/2.)*wi   # NOTE: this needs to be checked
-                    # print('me = ' + str(me))
-
-                for a in range(1,nen+1):
-                    if LM(a,e,xGlength) > 0:
-                        # F[LM(a,e,xGlength)-1] += fe[a-1]
-                        for b in range(1,nen+1):
-                            if LM(b,e,xGlength) > 0:
-                                K[LM(a,e,xGlength)-1,LM(b,e,xGlength)-1] += ke[a-1,b-1]
-                                M[LM(a,e,xGlength)-1,LM(b,e,xGlength)-1] += me[a-1,b-1]
-
-
-            # Get K and M matrices and pass to an eigensolver
-            # print('K = ' + str(K))
-            # print('M = ' + str(M))
-            eigvals, eigvecs = eigh(K, M, eigvals_only=False)
-            # print('\nEigenvalue shape is: ' + str(np.shape(eigvals)))
-            # print('Eigenvalues = ', eigvals)
-            # print('\nEigenvector matrix shape is: ' + str(np.shape(eigvecs)))
-            # print('Eigenvectors = ', eigvecs)
-            xarray = np.delete(xarray,0)
-
-        plt.plot(range(1,modes+1),wn,linestyle='--',marker='o')
-        plt.title('Exact solution of natural frequencies for ' + case + ' case')
+        # plt.plot(normmodenum,wn,linestyle='--',label='Exact solution')
+        # plt.plot(normmodenum,compfrequencies,linestyle='--',label='Computed solution')
+        # plt.title('Exact solution of natural frequencies for ' + case + ' case')
+        # plt.legend()
+        plt.plot(normmodenum,erratio)
+        plt.title('Error in computed natural frequencies for ' + case + ' case with p = ' + str(P))
+        plt.xlabel('Normalized mode number')
+        plt.ylabel('Normalized discrete frequency error')
         plt.show()
 
 
