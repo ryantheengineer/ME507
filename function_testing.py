@@ -10,8 +10,8 @@ from Code2 import IEN
 from Code2 import ID
 from Code2 import LM
 
-nel = 5
-p = 3
+nel = 10
+p = 1
 
 s = knot(p,nel)
 n = range(len(s)-p-1)
@@ -21,6 +21,7 @@ n = range(len(s)-p-1)
 xG = xAG(p,s,nel)
 print('xG = ', xG)
 xGlength = len(xG)
+print('There are ' + str(xGlength-1) + ' active nodes with p = ' + str(p) + ' and nel = ' + str(nel))
 nodeindex = np.zeros([p+1,nel])
 
 # for e in range(1,nel+1):

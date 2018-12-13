@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import math
+from scipy.linalg import eigh
 
 ## FUNCTIONS: ##
 # Bezier curves
@@ -207,15 +208,30 @@ def Bspline(e,p,nel,ksi):
 
 if __name__ == "__main__":
     ######### INPUT ###########
-    nel = [1, 5, 10, 20, 50, 100]
-    p = [1]
+    # nel = [1, 5, 10, 20, 50, 100]
+    nel = [10]
+    p = [2]
+    modes = 10  # How many of the first eigenmodes to solve for
+    wn = np.zeros([modes,1])
+
+    # Choose which case to examine (comment on or off)
+    case = 'Fixed-fixed'
+    # case = 'Free-fixed'
+
+
     # p = [1, 2, 3]
     E = 1000000.0
-    b = 0.005
-    h = 0.005
-    f = 10.*(h**3.)
-    I = (b*(h**3.))/12.
-    rho = 1.0
+    # b = 0.005
+    # h = 0.005
+    # f = 10.*(h**3.)
+    # I = (b*(h**3.))/12.
+    rho = 100.0
+    N = 1000
+    L = 1.0
+    if case == 'Fixed-fixed':
+        ng = 2
+    if case == 'Free-fixed':
+        ng = 1
 
     ######### SETUP ###########
 
@@ -223,27 +239,32 @@ if __name__ == "__main__":
     deflections = np.zeros([len(p),len(nel)])
     exactsol = np.zeros([len(nel),1])
 
-    for elements in nel:
-        # plt.figure()
-        print('\nn = ' + str(elements))
+    # Set up gauss quadrature rule
+    nint = 3
+    ksiint = gaussksi(nint)
+    W = gaussW(nint)
 
-        for P in p:
-            print('\n\tp = ' + str(P))
+    # for elements in nel:
+    #     # plt.figure()
+    #     print('\nn = ' + str(elements))
 
-            # Set up gauss quadrature rule
-            # If p = 1, change the number of integration points
-            if P == 1:
-                nint = 2
-            else:
-                nint = 3
-            ksiint = gaussksi(nint)
-            W = gaussW(nint)
+    for P in p:
+        print('\n\tp = ' + str(P))
 
-            evector = np.zeros([len(nel),1])
-            hvector = np.zeros([len(nel),1])
-            for i in range(len(hvector)):
-                hvector[i] = 1./nel[i]
-            nodevector = np.zeros([len(nel),1])
+        # Determine the number of elements based on the number of active nodes, N
+        elements = N - P + ng
+
+        for n in range(1,modes+1):
+            if case == 'Fixed-fixed':
+                wn[n-1] = (n*np.pi/L)*np.sqrt(E/rho)
+            if case == 'Free-fixed':
+                wn[n-1] = (n - 0.5)*(np.pi/L)*np.sqrt(E/rho)
+
+            # evector = np.zeros([len(nel),1])
+            # hvector = np.zeros([len(nel),1])
+            # for i in range(len(hvector)):
+            #     hvector[i] = 1./nel[i]
+            # nodevector = np.zeros([len(nel),1])
             count = 0
 
             he = 1./elements
@@ -259,12 +280,12 @@ if __name__ == "__main__":
 
             xG = xAG(P,knotvector,elements)  # nodes
             xGlength = len(xG)
-            nodevector[count] = xGlength
-            activenodes = len(xG)-1
+            # nodevector[count] = xGlength
+            activenodes = len(xG)-1     #FIXME: The number of active nodes is determined by the BCs
 
             K = np.zeros([activenodes-1,activenodes-1])
             M = np.zeros([activenodes-1,activenodes-1])
-            F = np.zeros([activenodes-1,1])
+            # F = np.zeros([activenodes-1,1])
             col = 0
 
             for e in range(1,elements+1):
@@ -286,7 +307,7 @@ if __name__ == "__main__":
                                    [0.,0.,1.,0.],
                                    [0.,0.,0.,1.]])
 
-                fe = np.zeros([nen,1])
+                # fe = np.zeros([nen,1])
                 ke = np.zeros([nen,nen])
                 me = np.zeros([nen,nen])
 
@@ -334,19 +355,19 @@ if __name__ == "__main__":
                         x2 += xG[a-1+(e-1)]*N2e[a-1]
                     x2array = np.append(x2array,x2)
 
-                    fi = f
+                    # fi = f
 
                     # calculate fe vector
                     for a in range(0,nen):
-                        fe[a] += Ne[a]*fi*(he/2.)*wi
+                        # fe[a] += Ne[a]*fi*(he/2.)*wi
                         for b in range(0,nen):
-                            ke[a,b] += N2e[a]*E*I*N2e[b]*((2./he)**3.)*wi
-                            me[a,b] += Ne[a]*rho*Ne[b]*(he/2.)*wi
-                    print('me = ' + str(me))
+                            ke[a,b] += N1e[a]*E*N1e[b]*(2./he)*wi
+                            me[a,b] += Ne[a]*rho*Ne[b]*(he/2.)*wi   # NOTE: this needs to be checked
+                    # print('me = ' + str(me))
 
                 for a in range(1,nen+1):
                     if LM(a,e,xGlength) > 0:
-                        F[LM(a,e,xGlength)-1] += fe[a-1]
+                        # F[LM(a,e,xGlength)-1] += fe[a-1]
                         for b in range(1,nen+1):
                             if LM(b,e,xGlength) > 0:
                                 K[LM(a,e,xGlength)-1,LM(b,e,xGlength)-1] += ke[a-1,b-1]
@@ -354,54 +375,67 @@ if __name__ == "__main__":
 
 
             # Get K and M matrices and pass to an eigensolver
-            print('K = ' + str(K))
-            print('M = ' + str(M))
-
-
+            # print('K = ' + str(K))
+            # print('M = ' + str(M))
+            eigvals, eigvecs = eigh(K, M, eigvals_only=False)
+            # print('\nEigenvalue shape is: ' + str(np.shape(eigvals)))
+            # print('Eigenvalues = ', eigvals)
+            # print('\nEigenvector matrix shape is: ' + str(np.shape(eigvecs)))
+            # print('Eigenvectors = ', eigvecs)
             xarray = np.delete(xarray,0)
-            xushift = np.zeros([len(xarray),1])
-            for x in range(len(xushift)):
-                xushift[x] = -xarray[x] + 1.
-            x1array = np.delete(x1array,0)
-            x2array = np.delete(x2array,0)
-            # print('xarray = ',xarray)
-            # print('x1array = ',x1array)
-            # print('x2array = ',x2array)
-            # print('Narray = ',Narray)
-            # print('K = ',K)
-            # print('F = ',F)
 
-            d = np.zeros([activenodes,1])
-            d = np.linalg.solve(K,F)
-            # append 0 on the end for calculating uh
-            d = np.append(d,[0.,0.])
-            # print('d = ',d)
+        plt.plot(range(1,modes+1),wn,linestyle='--',marker='o')
+        plt.title('Exact solution of natural frequencies for ' + case + ' case')
+        plt.show()
 
-            # Calculate uh(x)
-            uh = np.zeros([len(xarray),1])
-            for x in range(len(uh)):
-                loc = x/nint # integer devision returns the element number
-                for A in range(P+1):
-                    uh[x] += d[loc+A]*Narray[A,x]
 
-            maxtip = xarray[0]*((uh[0]-uh[1])/(np.abs(xarray[0]-xarray[1]))) + uh[0]
-            print('\tMax tip deflection = ' + str(maxtip))
 
-            deflections[p.index(P),nel.index(elements)] = maxtip
-            count += 1
 
-        exactsol[nel.index(elements)] = f/(8.0*E*I)
 
-    # Plot the results asked for in part 2, problem 1:
-    plt.title('Part 2.1')
-    plt.xlabel('Number of elements (n)')
-    plt.ylabel('Tip deflection (u)')
-    plt.plot(nel,deflections[0,:],label='p = 1',linewidth=1,color='b',
-        linestyle='--',marker='o')
-    # plt.plot(nel,deflections[1,:],label='p = 2',linewidth=1,color='g',
-    #     linestyle='--',marker='o')
-    # plt.plot(nel,deflections[2,:],label='p = 3',linewidth=1,color='r',
-    #     linestyle='--',marker='o')
-    plt.plot(nel,exactsol,label='Exact',linewidth=1)
-    plt.legend()
-    plt.show()
+
+#         xushift = np.zeros([len(xarray),1])
+#         for x in range(len(xushift)):
+#             xushift[x] = -xarray[x] + 1.
+#         x1array = np.delete(x1array,0)
+#         x2array = np.delete(x2array,0)
+#         # print('xarray = ',xarray)
+#         # print('x1array = ',x1array)
+#         # print('x2array = ',x2array)
+#         # print('Narray = ',Narray)
+#         # print('K = ',K)
+#         # print('F = ',F)
+#
+#         d = np.zeros([activenodes,1])
+#         d = np.linalg.solve(K,F)
+#         # append 0 on the end for calculating uh
+#         d = np.append(d,[0.,0.])
+#         # print('d = ',d)
+#
+#         # Calculate uh(x)
+#         uh = np.zeros([len(xarray),1])
+#         for x in range(len(uh)):
+#             loc = x/nint # integer devision returns the element number
+#             for A in range(P+1):
+#                 uh[x] += d[loc+A]*Narray[A,x]
+#
+#         maxtip = xarray[0]*((uh[0]-uh[1])/(np.abs(xarray[0]-xarray[1]))) + uh[0]
+#         print('\tMax tip deflection = ' + str(maxtip))
+#
+#         deflections[p.index(P),nel.index(elements)] = maxtip
+#         count += 1
+#
+#     exactsol[nel.index(elements)] = f/(8.0*E*I)
+#
+# # Plot the results asked for in part 2, problem 1:
+# plt.title('Part 2.1')
+# plt.xlabel('Number of elements (n)')
+# plt.ylabel('Tip deflection (u)')
+# plt.plot(nel,deflections[0,:],label='p = 1',linewidth=1,color='b',
+#     linestyle='--',marker='o')
+# # plt.plot(nel,deflections[1,:],label='p = 2',linewidth=1,color='g',
+# #     linestyle='--',marker='o')
+# # plt.plot(nel,deflections[2,:],label='p = 3',linewidth=1,color='r',
+# #     linestyle='--',marker='o')
+# plt.plot(nel,exactsol,label='Exact',linewidth=1)
+# plt.legend()
+# plt.show()
