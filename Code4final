@@ -1,12 +1,14 @@
 '''Code4final.py: FEA code for ME 507
    Part 1 of Coding Assignment 4'''
 
+# import matplotlib as mpl
+# mpl.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import math
 from scipy.linalg import eigh
-import pandas as pd
+# import pandas as pd
 
 ## FUNCTIONS: ##
 # Bezier curves
@@ -387,14 +389,7 @@ if __name__ == "__main__":
         print('\nK shape is: ' + str(np.shape(K)))
         print('\nM shape is: ' + str(np.shape(M)))
         print('\nNarray shape is: ' + str(np.shape(Narray)))
-        wn = np.zeros([N,1])
-        normmodenum = np.zeros([N,1])
-        for n in range(1,N+1):
-            if case == 'Fixed-fixed':
-                wn[n-1] = (n*np.pi/L)*np.sqrt(E/rho)
-            if case == 'Free-fixed':
-                wn[n-1] = (n - 0.5)*(np.pi/L)*np.sqrt(E/rho)
-            normmodenum[n-1] = float(n)/float(N)
+       
 
         # Get K and M matrices and pass to an eigensolver
         print('K = ' + str(K))
@@ -402,6 +397,15 @@ if __name__ == "__main__":
         eigvals, eigvecs = eigh(K, M, eigvals_only=False)
         print('\nEigenvalue shape is: ' + str(np.shape(eigvals)))
         print('\nEigenvector shape is: ' + str(np.shape(eigvecs)))
+
+        wn = np.zeros([len(eigvals),1])
+        normmodenum = np.zeros([len(eigvals),1])
+        for n in range(1,len(eigvals)+1):
+            if case == 'Fixed-fixed':
+                wn[n-1] = (n*np.pi/L)*np.sqrt(E/rho)
+            if case == 'Free-fixed':
+                wn[n-1] = (n - 0.5)*(np.pi/L)*np.sqrt(E/rho)
+            normmodenum[n-1] = float(n)/float(N)
 
         # print('Eigenvalues = ', eigvals)
         # print('\nEigenvector matrix shape is: ' + str(np.shape(eigvecs)))
@@ -416,8 +420,8 @@ if __name__ == "__main__":
 
 
         # Calculate uh(x) (Mode shape)
-        ksivector = np.linspace(-1,1,N,endpoint=True)
-        uh = np.zeros([N,10])
+        ksivector = np.linspace(-1,1,len(eigvals),endpoint=True)
+        uh = np.zeros([len(eigvals),10])
         for n in range(1,11):
             for i in range(len(uh)):
                 for A in range(P+1):
@@ -434,7 +438,7 @@ if __name__ == "__main__":
         plt.plot(ksivector,uh[:,8])
         plt.plot(ksivector,uh[:,9])
         plt.title('Mode shapes for ' + case + ' case in parent domain')
-
+        # plt.savefig('Modeshape.png')
 
 
         # plt.plot(normmodenum,wn,linestyle='--',label='Exact solution')
@@ -446,4 +450,5 @@ if __name__ == "__main__":
         plt.title('Error in computed natural frequencies for ' + case + ' case with p = ' + str(P))
         plt.xlabel('Normalized mode number')
         plt.ylabel('Normalized discrete frequency error')
+        # plt.savefig('error.png')
         plt.show()
