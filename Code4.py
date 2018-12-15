@@ -282,8 +282,8 @@ if __name__ == "__main__":
         # nodevector[count] = xGlength
         activenodes = len(xG)-1     #FIXME: The number of active nodes is determined by the BCs
 
-        K = np.zeros([activenodes-1,activenodes-1])
-        M = np.zeros([activenodes-1,activenodes-1])
+        K = np.zeros([N-ng,N-ng])
+        M = np.zeros([N-ng,N-ng])
         # F = np.zeros([activenodes-1,1])
         col = 0
 
